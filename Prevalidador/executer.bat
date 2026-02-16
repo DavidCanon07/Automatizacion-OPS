@@ -1,3 +1,3 @@
 @echo
-python "C:\Users\DAVID\OneDrive\1. CURSOS\Proyectos\automatizacion OPS\Prevalidador\pre-validador.py"
+python "C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\pre-validador.py"
 pause

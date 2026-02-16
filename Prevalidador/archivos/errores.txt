@@ -28,3 +28,9 @@ Columnas extra: {'Unnamed: 12'}
 Log de error: 2026-02-15 18:34:18.233227 - 
 ⚠️ Advertencia en OPS proceso X 08-02-2026 .xlsx
 Columnas extra: Columna M
+
+-------01 - Validación de columnas--------
+
+Log de error: 2026-02-16 10:05:46.584103 - 
+⚠️ Advertencia en OPS proceso X 08-02-2026 .xlsx
+Columnas extra: Columna M

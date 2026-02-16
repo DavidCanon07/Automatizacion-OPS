@@ -1,12 +1,12 @@
 from pathlib import Path
 
 
-Campos_a_validar = ["Unnamed: 0","Unnamed: 1","Entidad de la cuenta","Centro origen","Filler","Numero de la cuenta","Valor Ajuste","Cuenta","Tipo de operación","justificación contable","Cuenta contrapartida","Comentario","TIPO DE DOCUMENTO","NUMERO DE DOCUMENTO"," DIGITO DE VERIFICACIÓN"]
+Campos_a_validar = ["Unnamed: 0","Unnamed: 1","Entidad de la cuenta","Centro cuenta","filler","Numero de la cuenta","tipo","Valor Ajuste","Cuenta a afectar","justificacion contable","Cuentas contables contrapartida","Detalle del ajuste realizado","TIPO DE DOCUMENTO","NUMERO DE DOCUMENTO"," DIGITO DE VERIFICACION"]
 
-largo_campos = {"Entidad de la cuenta": 4, "Centro origen": 4, "Filler": 1, "Numero de la cuenta": 9, "Cuenta": 20, "Tipo de operación": 1, "Cuenta contrapartida": 12, "cuenta contrapartida": 9, "TIPO DE DOCUMENTO": 1, " DIGITO DE VERIFICACIÓN": 1}
+largo_campos = {"Entidad de la cuenta": 4, "Centro cuenta": 4, "filler": 1, "Numero de la cuenta": 9,"tipo": 1, "Cuenta a afectar": 20, "Cuentas contables contrapartida": 12, "Cuentas contables contrapartida": 9, "TIPO DE DOCUMENTO": 1, " DIGITO DE VERIFICACION": 1}
 
 
-carpeta = Path("C:\\Users\\DAVID\\OneDrive\\1. CURSOS\\Proyectos\\automatizacion OPS\\Prevalidador\\archivos")
+carpeta = Path("C:\\Users\\dacanonm\\OneDrive - Indra\\Documentos\\GitHub\\automatizacion OPS\\Prevalidador\\archivos")
 clave = "OPS"
 exts = {".xlsx", ".xls"}
 
