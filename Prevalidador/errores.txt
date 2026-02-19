@@ -1,0 +1,58 @@
+
+-------03 - Validación de campos específicos.--------
+
+Log de error: 2026-02-18 07:05:20.086082 - Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\03 - alertas_campos.xlsx
+
+-------03 - Validación de campos específicos.--------
+
+Log de error: 2026-02-18 07:06:21.892993 - Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\03 - alertas_campos.xlsx
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-18 07:16:21.712403 - 
+O_O Advertencia en Tapa OPS .xlsx
+Columnas extra: aló, hello, hola mundo, prueba
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-18 07:16:58.622161 - 
+O_O Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna P, Columna Q, aló, hello, hola mundo, prueba
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-18 07:25:07.361029 - 
+O_O Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna H
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-18 07:25:47.881331 - 
+O_O Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-18 12:03:51.002073 - 
+◬ Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-19 07:33:45.346823 - 
+◬ Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-19 07:51:01.019175 - 
+◬ Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-19 07:52:07.112293 - 
+◬ Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C

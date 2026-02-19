@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from Configuracion_parametros import carpeta, exts, clave, Campos_a_validar, largo_campos
+from Configuracion_parametros import carpeta, exts, clave, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo
 import os, time as t
 
 #libreria para funciones de formatea para nombres de columnas extra
@@ -12,13 +12,23 @@ from openpyxl.utils import get_column_letter
 #Función para validar que el dataframe tenga las columnas esperadas y detectar columnas extra
 def validar_columnas(df, archivo):
     
-    faltantes = set(Campos_a_validar) - set(df.columns)
-    extras = set(df.columns) - set(Campos_a_validar)
+    # Para evitar que columnas extra al final del dataframe (después de la columna "DIGITO DE VERIFICACION") sean consideradas como faltantes, se limita la validación solo hasta esa columna. Si la columna límite no existe, se valida contra todas las columnas del dataframe.
+    limite = "DIGITO DE VERIFICACION"
+    # Si la columna límite existe, se consideran solo las columnas hasta esa columna (inclusive). Si no existe, se consideran todas las columnas del dataframe.
+    if limite in df.columns:
+        idx_limite = df.columns.get_loc(limite)
+        columnas_hasta_limite = list(df.columns[:idx_limite + 1])
+    else:
+        columnas_hasta_limite = list(df.columns)
+    
+    # Se comparan las columnas hasta el límite con las columnas esperadas. Las columnas extra se formatean a un nombre más legible para el reporte.
+    faltantes = set(Campos_a_validar) - set(columnas_hasta_limite)
+    extras = set(columnas_hasta_limite) - set(Campos_a_validar)
     columnas_extra_legibles = [formatea_nombre_columna(col) for col in extras]
     #Si hay columnas faltantes, se lanza una excepción crítica. Si hay columnas extra, se lanza una advertencia.
     if faltantes:
         raise Exception(
-            f"\n❌ ERROR CRÍTICO\n"
+            f"\n✕ ERROR CRÍTICO\n"
             f"Archivo: {archivo}\n"
             f"Columnas faltantes: {faltantes}"
         )
@@ -26,7 +36,7 @@ def validar_columnas(df, archivo):
 
     if extras:
         raise Exception(
-            f"\nO_O Advertencia en {archivo}\n"
+            f"\n◬ Advertencia en {archivo}\n"
             f"Columnas extra: {', '.join(sorted(columnas_extra_legibles))}"
         )
         
@@ -51,9 +61,7 @@ def obtener_datos(carpeta, clave, exts):
             raise Exception("No hay archivos válidos para procesar")
         return datos
     except Exception as e:
-
-        print(f"\n-X- ERROR AL OBTENER LOS DATOS\n{str(e)}")
-        print(e)
+        # Si ocurre un error (como no encontrar archivos o columnas faltantes), se captura la excepción, se imprime el mensaje de error y se detiene el proceso.
         raise
 
 #-------------------------------------------------------------------------------------------------------------
@@ -107,15 +115,14 @@ def validar_largo_campos(df):
     if errores_totales:
         errores_totales = pd.concat(errores_totales)
         errores_totales.index = errores_totales.index + 8
-        ruta_error = r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\02 - errores_largo_campos.xlsx"
         errores_totales.to_excel(
-            ruta_error,
+            ruta_error_largo_campos,
             index=True,
             index_label="Fila en Excel"
         )
 
         raise Exception(
-            f"Se encontraron errores de longitud. Revisar archivo: {ruta_error}"
+            f"⚠ Se encontraron errores de longitud. Revisar archivo: 02 - errores_largo_campos.xlsx"
         )
     # Si no hay errores, se imprime mensaje de validación exitosa.
     else:
@@ -150,7 +157,7 @@ def validar_campos_vacios(df):
             alertas["descripcion"] = "Campo vacío".upper()
             alertas_totales.append(alertas)
 
-    ruta_alertas = r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\04 - alertas_campos.xlsx"
+
 
     # Solo escribimos Excel si HAY alertas
     if alertas_totales:
@@ -164,7 +171,7 @@ def validar_campos_vacios(df):
                 index=True,
                 index_label="Fila en Excel",
             )
-        print(f"⚠ Se generaron alertas por campos vacíos → {ruta_alertas}")
+        print(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos.xlsx")
     else:
         print("✔ No se encontraron campos vacíos.")
 
@@ -191,10 +198,10 @@ def validar_columna_tipo(df):
         
         errores_tipo.index = errores_tipo.index + 8
 
-        ruta_excel = r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\03 - alertas_campos.xlsx"
+
 
         with pd.ExcelWriter(
-            ruta_excel,
+            ruta_columna_tipo,
             engine="openpyxl",
         ) as writer:
 
@@ -206,7 +213,7 @@ def validar_columna_tipo(df):
             )
 
         raise Exception(
-            f"Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: {ruta_excel}"
+            f"⚠ Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: 03 - errores_columna_tipo.xlsx"
         )
     else:
         print("✔ Validación de columna 'tipo' completada sin errores.")
@@ -216,9 +223,9 @@ def validar_columna_tipo(df):
 #Función para borrar archivos temporales de validación (si existen)
 def borrar_archivos_temporales():
     archivos_temporales = [
-        r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\02 - errores_largo_campos.xlsx",
-        r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\03 - alertas_campos.xlsx",
-        r"C:\Users\dacanonm\OneDrive - Indra\Documentos\GitHub\automatizacion OPS\Prevalidador\04 - alertas_campos.xlsx"
+        ruta_error_largo_campos, #eliminar el archivo de errores de largo de campos
+        ruta_columna_tipo, #eliminar el archivo de errores de columna tipo
+        ruta_alertas #eliminar el archivo de alertas de campos vacíos
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):
