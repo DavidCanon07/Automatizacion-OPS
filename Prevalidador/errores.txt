@@ -56,3 +56,9 @@ Columnas extra: Columna C
 Log de error: 2026-02-19 07:52:07.112293 - 
 ◬ Advertencia en Tapa OPS .xlsx
 Columnas extra: Columna C
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-19 08:39:15.312899 - 
+◬ Advertencia en Tapa OPS .xlsx
+Columnas extra: Columna C

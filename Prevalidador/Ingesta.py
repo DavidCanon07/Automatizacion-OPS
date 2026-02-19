@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from Configuracion_parametros import carpeta, exts, clave, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo
+from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, log_exitoso
 import os, time as t
 
 #libreria para funciones de formatea para nombres de columnas extra
@@ -44,13 +44,13 @@ def validar_columnas(df, archivo):
 
 #-------------------------------------------------------------------------------------------------------------
 #Obtener los archivos de OPS + columna de nombre del archivo
-def obtener_datos(carpeta, clave, exts):
+def obtener_datos(carpeta_archivos, clave, exts):
     datos = []
     try:    
-        for i in Path(carpeta).iterdir():
+        for i in Path(carpeta_archivos).iterdir():
             if i.is_file() and i.suffix.lower() in exts and str(clave).lower() in i.stem.lower():
             # lee cada archivo de OPS que se encuentre en la ruta
-                print(f"Archivo encontrado: {i.name}")
+                escribir(f"Archivo encontrado: {i.name}")
                 t.sleep(0.5)
                 df = pd.read_excel(i, skiprows=6, dtype=str)
                 validar_columnas(df, i.name) #validar las columnas del archivo
@@ -58,7 +58,7 @@ def obtener_datos(carpeta, clave, exts):
                 datos.append(df)
 
         if not datos:
-            raise Exception("No hay archivos válidos para procesar")
+            raise Exception("No hay archivos válidos para procesar".upper())
         return datos
     except Exception as e:
         # Si ocurre un error (como no encontrar archivos o columnas faltantes), se captura la excepción, se imprime el mensaje de error y se detiene el proceso.
@@ -67,7 +67,7 @@ def obtener_datos(carpeta, clave, exts):
 #-------------------------------------------------------------------------------------------------------------
 #Concatena la información del dataframe
 def concatenar_datos():
-    datos = obtener_datos(carpeta, clave, exts)
+    datos = obtener_datos(carpeta_archivos, clave, exts)
     df_total = pd.concat(datos, ignore_index=True)
     return df_total
 
@@ -126,7 +126,7 @@ def validar_largo_campos(df):
         )
     # Si no hay errores, se imprime mensaje de validación exitosa.
     else:
-        print("✔ Validación de largo de campos completada sin errores.")
+        escribir("✔ Validación de largo de campos completada sin errores.")
 
     return df
 
@@ -171,9 +171,9 @@ def validar_campos_vacios(df):
                 index=True,
                 index_label="Fila en Excel",
             )
-        print(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos.xlsx")
+        escribir(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos.xlsx")
     else:
-        print("✔ No se encontraron campos vacíos.")
+        escribir("✔ No se encontraron campos vacíos.")
 
     return df
 
@@ -216,7 +216,7 @@ def validar_columna_tipo(df):
             f"⚠ Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: 03 - errores_columna_tipo.xlsx"
         )
     else:
-        print("✔ Validación de columna 'tipo' completada sin errores.")
+        escribir("✔ Validación de columna 'tipo' completada sin errores.")
     return df
 
 #-------------------------------------------------------------------------------------------------------------
@@ -225,7 +225,8 @@ def borrar_archivos_temporales():
     archivos_temporales = [
         ruta_error_largo_campos, #eliminar el archivo de errores de largo de campos
         ruta_columna_tipo, #eliminar el archivo de errores de columna tipo
-        ruta_alertas #eliminar el archivo de alertas de campos vacíos
+        ruta_alertas,#eliminar el archivo de alertas de campos vacíos
+        log_exitoso #eliminar el archivo de log de validación exitosa
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):
