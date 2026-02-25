@@ -52,7 +52,7 @@ def obtener_datos(carpeta_archivos, clave, exts):
             # lee cada archivo de OPS que se encuentre en la ruta
                 escribir(f"Archivo encontrado: {i.name}")
                 t.sleep(0.5)
-                df = pd.read_excel(i, skiprows=6, dtype=str)
+                df = pd.read_excel(i, skiprows=6, skipfooter=7 ,dtype=str)
                 validar_columnas(df, i.name) #validar las columnas del archivo
                 df["__archivo_origen"] = i.name
                 datos.append(df)

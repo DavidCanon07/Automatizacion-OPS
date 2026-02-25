@@ -18,6 +18,7 @@ try:
     # 01 - CARGA Y VALIDACIÓN DE COLUMNAS
     escribir("Ahora, vamos a cargar el archivo y validar que las columnas sean correctas...\n")
     df = concatenar_datos()
+    print(df.tail(5))
     
     escribir("Validación de columnas completada exitosamente."
         "\nPerfecto todo marcha bien, Empecemos la validación de campos...\n")
