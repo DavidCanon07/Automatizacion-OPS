@@ -1,12 +1,11 @@
 from pathlib import Path
 import pandas as pd
-from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, log_exitoso
+from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, log_exitoso, columna_ancla
 import os, time as t
 
 #libreria para funciones de formatea para nombres de columnas extra
 import re
 from openpyxl.utils import get_column_letter
-
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para validar que el dataframe tenga las columnas esperadas y detectar columnas extra
@@ -42,18 +41,50 @@ def validar_columnas(df, archivo):
         
 #-------------------------------------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------------------------------------
-#Obtener los archivos de OPS + columna de nombre del archivo
+
+
+#Función para eliminar el footer dinámicamente evaluando múltiples columnas ancla. Una fila se considera 'válida' si tiene dato en AL MENOS 3 de las columnas ancla. Todo lo que venga después de la última fila válida se descarta.
+def recortar_footer_dinamico(df):
+    """
+    Elimina el footer dinámicamente evaluando múltiples columnas ancla.
+    Una fila se considera 'válida' si tiene dato en AL MENOS 3 de las columnas ancla.
+    Todo lo que venga después de la última fila válida se descarta.
+    """
+    
+
+    # Filtrar solo las columnas ancla que existen en el df
+    cols_presentes = [c for c in columna_ancla if c in df.columns]
+    if not cols_presentes:
+        return df
+
+    def tiene_dato(val):
+        s = str(val).strip()
+        return s != "" and s.lower() != "nan" and s != "none"
+
+    # Para cada fila, contar cuántas columnas ancla tienen dato real
+    conteo = df[cols_presentes].apply(lambda row: sum(tiene_dato(v) for v in row), axis=1)
+
+    # Una fila es válida si tiene dato en al menos 3 columnas ancla (ajustable)
+    filas_validas = conteo >= 3
+
+    if filas_validas.any():
+        ultima_fila_valida = filas_validas[::-1].idxmax()
+        return df.loc[:ultima_fila_valida]
+
+    return df.iloc[0:0]  # DataFrame vacío si no hay filas válidas
+
+
+#Función para obtener los datos de los archivos que cumplen con la clave y extensión, aplicando validación de columnas y recorte de footer dinámico.
 def obtener_datos(carpeta_archivos, clave, exts):
     datos = []
     try:    
         for i in Path(carpeta_archivos).iterdir():
             if i.is_file() and i.suffix.lower() in exts and str(clave).lower() in i.stem.lower():
-            # lee cada archivo de OPS que se encuentre en la ruta
                 escribir(f"Archivo encontrado: {i.name}")
                 t.sleep(0.5)
-                df = pd.read_excel(i, skiprows=6, skipfooter=7 ,dtype=str)
-                validar_columnas(df, i.name) #validar las columnas del archivo
+                df = pd.read_excel(i, skiprows=6, dtype=str)
+                df = recortar_footer_dinamico(df)  # Corte dinámico del footer
+                validar_columnas(df, i.name)
                 df["__archivo_origen"] = i.name
                 datos.append(df)
 
@@ -61,7 +92,6 @@ def obtener_datos(carpeta_archivos, clave, exts):
             raise Exception("No hay archivos válidos para procesar".upper())
         return datos
     except Exception as e:
-        # Si ocurre un error (como no encontrar archivos o columnas faltantes), se captura la excepción, se imprime el mensaje de error y se detiene el proceso.
         raise
 
 #-------------------------------------------------------------------------------------------------------------

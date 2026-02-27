@@ -28,7 +28,6 @@ try:
 
     # 02 - VALIDACIÓN DE LARGO DE CAMPOS
     try:
-        
         escribir("Validando largo de campos...\n")
         validar_largo_campos(df)
 

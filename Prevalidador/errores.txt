@@ -1,0 +1,20 @@
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-19 09:27:57.433822 - No hay archivos válidos para procesar
+
+-------02 - Validación de largo de campos.--------
+
+Log de error: 2026-02-25 11:14:50.599163 - ⚠ Se encontraron errores de longitud. Revisar archivo: 02 - errores_largo_campos.xlsx
+
+-------01 - Validación de columnas Y entrada de archivos.--------
+
+Log de error: 2026-02-25 11:22:51.154852 - [Errno 13] Permission denied: 'C:\\Prevalidador\\archivos\\~$Tapa OPS .xlsx'
+
+-------02 - Validación de largo de campos.--------
+
+Log de error: 2026-02-26 07:20:34.595468 - ⚠ Se encontraron errores de longitud. Revisar archivo: 02 - errores_largo_campos.xlsx
+
+-------03 - Validación de campos específicos.--------
+
+Log de error: 2026-02-26 07:21:26.733205 - ⚠ Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: 03 - errores_columna_tipo.xlsx
