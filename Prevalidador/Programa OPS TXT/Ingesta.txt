@@ -145,8 +145,6 @@ def validar_largo_campos(df):
     if errores_totales:
         errores_totales = pd.concat(errores_totales)
         errores_totales.index = errores_totales.index + 8
-        errores_totales = errores_totales.sort_index()
-        
         errores_totales.to_excel(
             ruta_error_largo_campos,
             index=True,
@@ -193,9 +191,8 @@ def validar_campos_vacios(df):
 
     # Solo escribimos Excel si HAY alertas
     if alertas_totales:
-        alertas_totales = pd.concat(alertas_totales)
+        alertas_totales = pd.concat(alertas_totales, ignore_index=True)
         alertas_totales.index = alertas_totales.index + 8
-        alertas_totales = alertas_totales.sort_index()
 
         with pd.ExcelWriter(ruta_alertas, engine="openpyxl", mode="w") as writer:
             alertas_totales.to_excel(
@@ -228,8 +225,8 @@ def validar_columna_tipo(df):
         errores_tipo = errores_tipo.copy()
         errores_tipo["campo_evento"] = "tipo".upper()
         errores_tipo["descripcion"] = "Solo se permiten valores 'P' o 'N' en mayúscula".upper()
+        
         errores_tipo.index = errores_tipo.index + 8
-        errores_tipo = errores_tipo.sort_index()
 
 
 
