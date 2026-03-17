@@ -1,4 +1,6 @@
-from Ingesta import concatenar_datos, validar_largo_campos, validar_campos_vacios, validar_columna_tipo, borrar_archivos_temporales
+from validador.carga import concatenar_datos
+from validador.validaciones import validar_largo_campos, validar_campos_vacios, validar_columna_tipo, validar_redondeo_valores
+from validador.reportes import borrar_archivos_temporales
 from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir
 from datetime import datetime
 import time as t
@@ -84,7 +86,23 @@ try:
             f.write(f"\nLog de alerta: {datetime.now()} - {error_msg}\n")
 
         exit()
+    #05 VALIDACIÓN DE DECIMALES EN CAMPOS DE VALOR
+    try:
+        escribir("Validando redondeo de valores en campos de valor...\n")
+        validar_redondeo_valores(df)
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("valores con decimales que no estan redondeados a 2 decimales Detectados.\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------05 - Validación de decimales en campos de valor.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
 
+#------------------------------------------------------------------------------
     # Si todo salió bien, puede guardar un Log de validación exitosa.
     
     escribir("\nPerfecto! No se han encontrado errores en las validaciones. El archivo está listo para ser montado en la ruta de la OPS.\n"
@@ -101,7 +119,8 @@ try:
                 "1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
                 "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
                 f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
-        
+
+#------------------------------------------------------------------------------
 # EXCEPCIÓN GENERAL (ERRORES DE INGESTA O COLUMNAS)
 except Exception as e:
     escribir("\n✕ ERROR DURANTE EL PROCESO DE VALIDACIÓN\n")

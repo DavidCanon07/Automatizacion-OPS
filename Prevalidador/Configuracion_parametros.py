@@ -34,6 +34,7 @@ ruta_error_txt = r"C:\Prevalidador\errores.txt"
 ruta_error_largo_campos = r"C:\Prevalidador\02 - errores_largo_campos.xlsx"
 ruta_columna_tipo = r"C:\Prevalidador\03 - errores_columna_tipo.xlsx"
 ruta_alertas = r"C:\Prevalidador\04 - alertas_campos.xlsx"
+ruta_redondeo = r"C:\Prevalidador\05 - errores_redondeo.xlsx"
 log_exitoso = r"C:\Prevalidador\log.txt"
 
 # Función para imprimir texto con efecto de máquina de escribir
