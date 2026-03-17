@@ -7,6 +7,8 @@ columna_ancla = ['Entidad de la cuenta', 'Centro cuenta', 'numero de la cuenta',
 # Configuración de parámetros para el pre-validador
 Campos_a_validar = ['Unnamed: 0','Unnamed: 1','Entidad de la cuenta','Centro cuenta','filler','numero de la cuenta','tipo','valor ajuste','Cuenta a afectar','Justificacion contable','Cuentas contables contrapartida','Detalle del ajuste realizado','TIPO DE DOCUMENTO','NUMERO DE DOCUMENTO','DIGITO DE VERIFICACION']
 
+print(Campos_a_validar.index('Entidad de la cuenta'))
+
 # Configuración de validación de largo de campos (longitud máxima permitida)
 largo_campos = {'Entidad de la cuenta': 4, 'Centro cuenta': 4, 'filler': 1, 'numero de la cuenta': 9,'tipo': 1, 'Cuenta a afectar': 20, 'Cuentas contables contrapartida': (9,12),'TIPO DE DOCUMENTO': 1, 'DIGITO DE VERIFICACION': 1}
 
@@ -36,6 +38,8 @@ ruta_columna_tipo = r"C:\Prevalidador\03 - errores_columna_tipo.xlsx"
 ruta_alertas = r"C:\Prevalidador\04 - alertas_campos.xlsx"
 ruta_redondeo = r"C:\Prevalidador\05 - errores_redondeo.xlsx"
 log_exitoso = r"C:\Prevalidador\log.txt"
+ruta_inicio_campo = r"C:\Prevalidador\06 - errores_inicio_numero_cuenta.xlsx"
+ruta_caracteres_especiales = r"C:\Prevalidador\07 - errores_caracteres_especiales.xlsx"
 
 # Función para imprimir texto con efecto de máquina de escribir
 def escribir(texto, velocidad=0.01):

@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso
+from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_caracteres_especiales
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para borrar archivos temporales de validación (si existen)
@@ -10,6 +10,8 @@ def borrar_archivos_temporales():
         ruta_columna_tipo,       #eliminar el archivo de errores de columna tipo
         ruta_alertas,            #eliminar el archivo de alertas de campos vacíos
         ruta_redondeo,           #eliminar el archivo de errores de redondeo en campos de valor
+        ruta_inicio_campo,       #eliminar el archivo de errores por número de cuenta
+        ruta_caracteres_especiales, #eliminar el archivo de errores por caracteres especiales
         log_exitoso              #eliminar el archivo de log de validación exitosa
     ]
     for ruta in archivos_temporales:
@@ -23,7 +25,7 @@ def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_na
     df_errores.index = df_errores.index + 8
     df_errores = df_errores.sort_index()
 
-    # Crear carpeta si no existe
+    #Crear carpeta si no existe
     os.makedirs(os.path.dirname(ruta), exist_ok=True)
 
     with pd.ExcelWriter(ruta, engine="openpyxl", mode="w") as writer:

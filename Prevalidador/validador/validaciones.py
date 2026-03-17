@@ -1,5 +1,5 @@
 import pandas as pd
-from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo
+from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_caracteres_especiales
 from validador.reportes import exportar_errores
 
 #-------------------------------------------------------------------------------------------------------------
@@ -161,3 +161,66 @@ def validar_redondeo_valores(df):
     return df
 
 #-------------------------------------------------------------------------------------------------------------
+def validar_inicio_numero_cuenta(df, campo: str, prefijo):
+    if campo not in df.columns:
+        return df
+
+    col = df[campo].fillna("").astype(str).str.strip()
+    con_dato = col != ""
+    errores_mask = con_dato & ~col.str.startswith(prefijo)
+    errores = df[errores_mask].copy()
+
+    if not errores.empty:
+        errores["Causal"] = "ERROR"
+        errores["campo_evento"] = campo.upper()
+        errores["descripcion"] = f"EL CAMPO DEBE INICIAR POR {prefijo}"
+
+        exportar_errores(
+            errores,
+            ruta_inicio_campo,
+            f"⚠ Se encontraron valores en '{campo}' que no inician por {prefijo}. "
+            f"Revisar archivo: 06 - errores_inicio_numero_cuenta.xlsx",
+            sheet_name="Errores Inicio Campo"
+        )
+    else:
+        escribir(f"✔ Validación de inicio de campo '{campo}' completada sin errores.")
+
+    return df
+
+#-------------------------------------------------------------------------------------------------------------
+
+def validar_caracteres_especiales(df):
+    errores_totales = []
+
+    #filtrar columnas de interés
+    campos_filtrados = [
+        campo for campo in Campos_a_validar
+        if campo not in {"Unnamed: 0", "Unnamed: 1", "Detalle del ajuste realizado"}
+    ]
+
+    # Validar solo campos con dato
+    for nombre_campo in campos_filtrados:         
+        if nombre_campo not in df.columns:
+            continue
+        serie = df[nombre_campo].fillna("").astype(str).str.strip()  
+        con_dato = serie != ""
+        errores_mask = con_dato & serie.str.contains(r"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]", regex=True)
+        errores = df[errores_mask].copy()
+        # Solo escribimos Excel si HAY errores
+        if not errores.empty:
+            errores["Causal"] = "ERROR"
+            errores["campo_evento"] = nombre_campo.upper()  
+            errores["descripcion"] = "EXISTEN CARACTERES ESPECIALES EN EL CAMPO"
+            errores_totales.append(errores)
+        else:
+            escribir(f"✔ Validación de caracteres especiales en '{nombre_campo}' completada sin errores.")
+
+    # Si hay errores en alguno de los campos, se agrega informacion de causal y descripcion para el reporte
+    if errores_totales:
+        exportar_errores(
+            pd.concat(errores_totales),
+            ruta_caracteres_especiales,
+            "⚠ Se encontraron caracteres especiales en uno o más campos. "
+            "Revisar archivo: 07 - errores_caracteres_especiales.xlsx",
+            sheet_name="Errores Caracteres Especiales"
+        )

@@ -79,6 +79,8 @@ def obtener_datos(carpeta_archivos, clave, exts):
                 df = recortar_footer_dinamico(df)  # Corte dinámico del footer
                 validar_columnas(df, i.name)
                 df["__archivo_origen"] = i.name
+                
+                df = df.reset_index(drop=True)
                 datos.append(df)
 
         if not datos:
@@ -91,7 +93,7 @@ def obtener_datos(carpeta_archivos, clave, exts):
 #Concatena la información del dataframe
 def concatenar_datos():
     datos = obtener_datos(carpeta_archivos, clave, exts)
-    df_total = pd.concat(datos, ignore_index=True)
+    df_total = pd.concat(datos)
     return df_total
 
 #-------------------------------------------------------------------------------------------------------------

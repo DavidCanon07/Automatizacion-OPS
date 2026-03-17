@@ -1,17 +1,14 @@
-from validador.carga import concatenar_datos
-from validador.validaciones import validar_largo_campos, validar_campos_vacios, validar_columna_tipo, validar_redondeo_valores
-from validador.reportes import borrar_archivos_temporales
+from validador import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_caracteres_especiales
 from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir
 from datetime import datetime
-import time as t
+
 
 
 try:
-    
+
     escribir("¡Hola!:D Bienvenido al pre-validador de archivos de OPS. Iniciando proceso de validación...\n"
         "Primero, antes de comenzar limpiemos la información de validaciones anteriores para tener un entorno limpio.\n")
     # Crear carpetas necesarias para el proceso (si no existen)
-    
     escribir("Verificando que las carpetas necesarias para el proceso existan...\n")
     crear_carpeta_si_no_existe(base_path, carpeta_archivos)
     # Limpiar archivos de validaciones anteriores
@@ -23,28 +20,28 @@ try:
     
     escribir("Validación de columnas completada exitosamente."
         "\nPerfecto todo marcha bien, Empecemos la validación de campos...\n")
-
+    
     # Eliminar columnas no deseadas
     df = df.drop(columns=["Unnamed: 0", "Unnamed: 1"], errors="ignore")
-
+    
     # 02 - VALIDACIÓN DE LARGO DE CAMPOS
     try:
         escribir("Validando largo de campos...\n")
         validar_largo_campos(df)
-
+        
     except Exception as e:
         error_msg = str(e)
         
         escribir("Vaya! Se han encontrado errores en la validación de largo de campos.\n")
         escribir(error_msg)
-
+        
         with open(
             ruta_error_txt,
             "a", encoding="utf-8"
         ) as f:
             f.write("\n-------02 - Validación de largo de campos.--------\n")
             f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
-
+            
         exit()
 
     # 03 - VALIDACIÓN DE CAMPOS ESPECÍFICOS (Ejemplo: columna 'tipo')
@@ -101,6 +98,46 @@ try:
         ) as f:
             f.write("\n-------05 - Validación de decimales en campos de valor.--------\n")
             f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+        
+        exit()
+    
+    #06 VALIDACIÓN DE INICIO DE CAMPO NUMERO DE CUENTA
+    try:
+        escribir("Validando inicio de campo 'numero de la cuenta'...\n")
+        validar_inicio_numero_cuenta(df, "numero de la cuenta", ("1","2"))
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("La columna de numero de la cuenta no inicia por los prefijos permitidos 1(Cuenta de ahorros) o 2(Cuenta corriente).\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------06 - Validación de inicio de campo 'numero de la cuenta'.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+            
+        exit()
+        
+    #07 VALIDACIÓN DE CARACTERES ESPECIALES
+    try:
+        escribir("Validando los campos que contienen caracteres especiales...\n'...\n")
+        validar_caracteres_especiales(df)
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("Se encontraron caracteres especiales en alguno de los campos.\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------07 - errores_caracteres_especiales.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+            
+        exit()
 
 #------------------------------------------------------------------------------
     # Si todo salió bien, puede guardar un Log de validación exitosa.
