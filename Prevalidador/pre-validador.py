@@ -1,6 +1,7 @@
-from validador import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_caracteres_especiales
-from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir
+from validador import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_entidad_cuenta, validar_filler, validar_duplicados, validar_justificacion_contable
+from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir, ruta_duplicados
 from datetime import datetime
+import os
 
 
 
@@ -120,42 +121,104 @@ try:
             
         exit()
         
-    #07 VALIDACIÓN DE CARACTERES ESPECIALES
+    #07 VALIDACIÓN DE ENTIDAD CUENTA
     try:
-        escribir("Validando los campos que contienen caracteres especiales...\n'...\n")
-        validar_caracteres_especiales(df)
+        escribir("Validando el campo 'entidad de la cuenta'...\n")
+        validar_entidad_cuenta(df)
         
     except Exception as e:
         error_msg = str(e)
         
-        escribir("Se encontraron caracteres especiales en alguno de los campos.\n")
+        escribir("Se encontraron valores no permitidos en la columna 'entidad de la cuenta' (diferentes de 0013).\n")
         escribir(error_msg)
         with open(
             ruta_error_txt,
             "a", encoding="utf-8"
         ) as f:
-            f.write("\n-------07 - errores_caracteres_especiales.--------\n")
+            f.write("\n-------07 - errores_entidad_de_cuenta.--------\n")
             f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
             
         exit()
+        
+    #08 VALIDACIÓN DE FILLER
+    try:
+        escribir("Validando el campo 'filler'...\n")
+        validar_filler(df)
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("Se encontraron valores no permitidos en la columna 'filler' (diferentes de 0).\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------08 - errores_filler.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+            
+        exit()
+        
+    #09 VALIDACIÓN DE TIPO
+    try:
+        escribir("Validando el campo 'justificacion contable' sea coincidente con el campo 'tipo'...\n")
+        validar_justificacion_contable(df)
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("Se encontraron valores no permitidos y/o no coincidentes en la columna 'justificacion contable' con el campo 'tipo' (diferentes a los establecidos).\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------09 - errores_justificacion_contable.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+            
+        exit()
+        
+    # VALIDACIÓN DE DUPLICADOS
+    try:
+        escribir("Validando la tapa de OPS para verificar duplicados...\n")
+        validar_duplicados(df)
+        
+    except Exception as e:
+        error_msg = str(e)
+        
+        escribir("Se encontraron valores duplicados -> 🚧¡REVISA TU ARCHIVO ANTES DE MONTAR EN LA RUTA! Se pueden encontrar transacciones duplicadas fuera del proceso habitual.🚧\n")
+        escribir(error_msg)
+        with open(
+            ruta_error_txt,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write("\n-------ALERTA_DUPLICADOS.--------\n")
+            f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
+
 
 #------------------------------------------------------------------------------
-    # Si todo salió bien, puede guardar un Log de validación exitosa.
-    
-    escribir("\nPerfecto! No se han encontrado errores en las validaciones. El archivo está listo para ser montado en la ruta de la OPS.\n"
-        "Recuerda revisar el archivo Log.txt y te comparto recomendaciones generales: \n")
-    print("1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
-        "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
-        f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
-    with open(
-        log_exitoso,
-        "a", encoding="utf-8"
-    ) as f:
-        f.write(f"\nLog de validación exitosa: {datetime.now()} - Perfecto! No se han encontrado errores en las validaciones. El archivo está listo para ser montado en la ruta de la OPS.\n"
-                "\nalgunas recomendaciones: \n"
-                "1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
-                "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
-                f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
+    # FINALIZACIÓN DEL PROCESO DE VALIDACIÓN -> valida que no tenga alertas de duplicados y que no haya errores críticos
+    if os.path.exists(ruta_duplicados):
+        escribir(f"\nRevisa el archivo alertas de duplicados antes de montar el archivo en la ruta de la OPS para evitar posibles duplicados fuera del proceso normal.\n")
+        print("👀COMO SE PRESENTO UNA DUPLICIDAD Y VALIDA QUE SEA NORMAL(archivo 'ALERTAS_DUPLICADOS.xlsx')👀, DESPUES SIGUE LAS RECOMENDACIONES:\n"
+            "1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
+            "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
+            f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
+    else:
+        escribir(f"\nPerfecto! No se han encontrado errores en las validaciones(no errores críticos). El archivo está listo para ser montado en la ruta de la OPS.\n"
+            "Recuerda revisar el archivo Log.txt y te comparto recomendaciones generales: \n")
+        print("1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
+            "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
+            f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
+        with open(
+            log_exitoso,
+            "a", encoding="utf-8"
+        ) as f:
+            f.write(f"\nLog de validación exitosa: {datetime.now()} - Perfecto! No se han encontrado errores en las validaciones. El archivo está listo para ser montado en la ruta de la OPS.\n"
+                    "\nalgunas recomendaciones: \n"
+                    "1. Asegúrate de que en la ruta se crea la carpeta de tu proceso\n"
+                    "2. Verifica que las Tapas de OPS se monten en la ruta correcta y con el formato correcto\n"
+                    f"3. El archivo debe llevar la fecha del día (Ejemplo: OPS 'Nombre proceso' {datetime.now().strftime('%d-%m-%Y')}.xlsx)\n".upper())
 
 #------------------------------------------------------------------------------
 # EXCEPCIÓN GENERAL (ERRORES DE INGESTA O COLUMNAS)

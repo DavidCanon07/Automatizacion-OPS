@@ -1,7 +1,6 @@
 import os
 import pandas as pd
-from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_caracteres_especiales
-
+from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable
 #-------------------------------------------------------------------------------------------------------------
 #Función para borrar archivos temporales de validación (si existen)
 def borrar_archivos_temporales():
@@ -11,7 +10,10 @@ def borrar_archivos_temporales():
         ruta_alertas,            #eliminar el archivo de alertas de campos vacíos
         ruta_redondeo,           #eliminar el archivo de errores de redondeo en campos de valor
         ruta_inicio_campo,       #eliminar el archivo de errores por número de cuenta
-        ruta_caracteres_especiales, #eliminar el archivo de errores por caracteres especiales
+        ruta_entidad_cuenta,     #eliminar el archivo de errores por entidad de cuenta
+        ruta_filler,             #eliminar el archivo de errores por filler
+        ruta_justificacion_contable, #eliminar el archivo de errores por justificacion contable
+        ruta_duplicados,         #eliminar el archivo de errores por duplicados
         log_exitoso              #eliminar el archivo de log de validación exitosa
     ]
     for ruta in archivos_temporales:

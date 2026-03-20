@@ -1,6 +1,6 @@
 import pandas as pd
-from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_caracteres_especiales
-from validador.reportes import exportar_errores
+from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, justificacion_contable, ruta_justificacion_contable
+from validador.reportes import exportar_errores 
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para validar el largo de campos específicos
@@ -94,7 +94,7 @@ def validar_campos_vacios(df):
                 index=True,
                 index_label="Fila en Excel",
             )
-        escribir(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos.xlsx")
+        escribir(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos_vacios.xlsx")
     else:
         escribir("✔ No se encontraron campos vacíos.")
 
@@ -188,39 +188,150 @@ def validar_inicio_numero_cuenta(df, campo: str, prefijo):
     return df
 
 #-------------------------------------------------------------------------------------------------------------
+def validar_entidad_cuenta(df):
+    
+    if "Entidad de la cuenta" not in df.columns:
+        return df
 
-def validar_caracteres_especiales(df):
+    # Limpieza estándar
+    df["Entidad de la cuenta"] = (
+        df["Entidad de la cuenta"].fillna("").astype(str).str.strip().str.zfill(4)
+    )
+
+    # Detectar valores inválidos
+    errores_tipo = df[
+        ~(df["Entidad de la cuenta"] == "0013") & 
+        (df["Entidad de la cuenta"] != "")
+    ].copy()
+
+    if not errores_tipo.empty:
+        errores_tipo["Causal"] = "ERROR"                                          
+        errores_tipo["campo_evento"] = "ENTIDAD DE LA CUENTA"
+        errores_tipo["descripcion"] = "SOLO SE PERMITE EL CÓDIGO DE ENTIDAD '0013'"
+
+        exportar_errores(                                                          #
+            errores_tipo,
+            ruta_entidad_cuenta,
+            "⚠ Se encontraron valores inválidos en 'Entidad de la cuenta'. "
+            "Revisar archivo: 07 - errores_entidad_de_cuenta.xlsx",
+            sheet_name="Errores Entidad Cuenta"
+        )
+    else:
+        escribir("✔ Validación de entidad completada sin errores.")
+
+    return df
+
+#-------------------------------------------------------------------------------------------------------------
+
+def validar_filler(df):
+    
+    if "filler" not in df.columns:
+        return df
+
+    # Limpieza estándar
+    df["filler"] = (
+        df["filler"].fillna("").astype(str).str.strip()
+    )
+
+    # Detectar valores inválidos
+    errores_tipo = df[
+        ~(df["filler"] == "0") & 
+        (df["filler"] != "")
+    ].copy()
+
+    if not errores_tipo.empty:
+        errores_tipo["Causal"] = "ERROR"                                          
+        errores_tipo["campo_evento"] = "FILLER"
+        errores_tipo["descripcion"] = "SOLO SE PERMITE EL CÓDIGO DE FILLER '0'"
+
+        exportar_errores(                                                          #
+            errores_tipo,
+            ruta_filler,
+            "⚠ Se encontraron valores inválidos en 'Filler'. "
+            "Revisar archivo: 08 - errores_filler.xlsx",
+            sheet_name="Errores Filler"
+        )
+    else:
+        escribir("✔ Validación de filler completada sin errores.")
+
+    return df
+
+#-------------------------------------------------------------------------------------------------------------
+def validar_duplicados(df):
+    
+    # columnas de validación de duplicados
+    columnas_llave =[
+        'Entidad de la cuenta','Centro cuenta','filler','numero de la cuenta','tipo','valor ajuste','Cuenta a afectar','Justificacion contable','Cuentas contables contrapartida','Detalle del ajuste realizado','TIPO DE DOCUMENTO','NUMERO DE DOCUMENTO','DIGITO DE VERIFICACION'
+    ]
+    
+    # iterar columnas
+    cols_presentes = [c for c in columnas_llave if c in df.columns]
+    # Detectar duplicados
+    errores_tipo = df.duplicated(subset=cols_presentes, keep=False)
+    errores_tipo = df[errores_tipo].copy()
+
+    # Si hay errores, se exportan a Excel y se lanza una excepción. Si no, se imprime mensaje de validación exitosa.
+    if not errores_tipo.empty:
+        errores_tipo["Causal"] = "ALERTA"                                        
+        errores_tipo["campo_evento"] = "DUPLICADOS"
+        errores_tipo["descripcion"] = "EXISTEN DUPLICADOS EN EL ARCHIVO"
+
+        exportar_errores(                                                          #
+            errores_tipo,
+            ruta_duplicados,
+            "⚠ Se encontraron duplicados en el archivo. "
+            "Revisar archivo: ALERTA_DUPLICADOS.xlsx",
+            sheet_name="Alerta Duplicados"
+        )
+    else:
+        escribir("✔ Validación de duplicados completada sin Alertas.")
+
+    return df
+
+#-------------------------------------------------------------------------------------------------------------
+
+def validar_justificacion_contable(df):
+    
+    # Verificación correcta de columnas
+    if "tipo" not in df.columns or "Justificacion contable" not in df.columns:
+        return df
+
+    # Limpieza estándar
+    df["Justificacion contable"] = (
+        df["Justificacion contable"].fillna("").astype(str).str.strip()
+    )
+    df["tipo"] = df["tipo"].fillna("").astype(str).str.strip()
+
     errores_totales = []
 
-    #filtrar columnas de interés
-    campos_filtrados = [
-        campo for campo in Campos_a_validar
-        if campo not in {"Unnamed: 0", "Unnamed: 1", "Detalle del ajuste realizado"}
-    ]
+    # Validar por cada tipo (P y N) por separado
+    for tipo_valor, justificaciones_validas in justificacion_contable.items():
+        
+        # Filtrar filas que corresponden a este tipo
+        df_tipo = df[df["tipo"] == tipo_valor]
+        
+        # Detectar justificaciones que no están en la lista válida para ese tipo
+        con_dato = df_tipo["Justificacion contable"] != ""
+        errores_mask = con_dato & ~df_tipo["Justificacion contable"].isin(justificaciones_validas)
+        errores = df_tipo[errores_mask].copy()
 
-    # Validar solo campos con dato
-    for nombre_campo in campos_filtrados:         
-        if nombre_campo not in df.columns:
-            continue
-        serie = df[nombre_campo].fillna("").astype(str).str.strip()  
-        con_dato = serie != ""
-        errores_mask = con_dato & serie.str.contains(r"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]", regex=True)
-        errores = df[errores_mask].copy()
-        # Solo escribimos Excel si HAY errores
         if not errores.empty:
             errores["Causal"] = "ERROR"
-            errores["campo_evento"] = nombre_campo.upper()  
-            errores["descripcion"] = "EXISTEN CARACTERES ESPECIALES EN EL CAMPO"
+            errores["campo_evento"] = "JUSTIFICACION CONTABLE"
+            errores["descripcion"] = (
+                f"JUSTIFICACIÓN NO PERMITIDA PARA TIPO '{tipo_valor}'"
+            )
             errores_totales.append(errores)
-        else:
-            escribir(f"✔ Validación de caracteres especiales en '{nombre_campo}' completada sin errores.")
 
-    # Si hay errores en alguno de los campos, se agrega informacion de causal y descripcion para el reporte
     if errores_totales:
         exportar_errores(
             pd.concat(errores_totales),
-            ruta_caracteres_especiales,
-            "⚠ Se encontraron caracteres especiales en uno o más campos. "
-            "Revisar archivo: 07 - errores_caracteres_especiales.xlsx",
-            sheet_name="Errores Caracteres Especiales"
+            ruta_justificacion_contable,
+            "⚠ Se encontraron valores inválidos en 'Justificacion contable'. "
+            "Revisar archivo: 09 - errores_justificacion_contable.xlsx",
+            sheet_name="Errores Justificacion Contable"
         )
+    else:
+        escribir("✔ Validación de justificación contable completada sin errores.")
+
+    return df
