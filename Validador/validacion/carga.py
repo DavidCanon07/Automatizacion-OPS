@@ -1,10 +1,9 @@
 from pathlib import Path
 import pandas as pd
 import time as t
-from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, columna_ancla
+from Configuracion_parametros import escribir, columna_ancla
 from validacion.utils import formatea_nombre_columna
 from Configuracion_parametros import Campos_a_validar
-import time as t
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para validar que el dataframe tenga las columnas esperadas y detectar columnas extra
@@ -113,7 +112,7 @@ def obtener_datos(carpeta_archivos, clave, exts):
 
 #-------------------------------------------------------------------------------------------------------------
 #Concatena la información del dataframe
-def concatenar_datos():
+def concatenar_datos(carpeta_archivos, clave, exts):
     datos = obtener_datos(carpeta_archivos, clave, exts)
     df_total = pd.concat(datos)
     return df_total

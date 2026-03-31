@@ -1,6 +1,7 @@
 import os
+import glob
 import pandas as pd
-from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado, ruta_formato_ops
+from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado
 #-------------------------------------------------------------------------------------------------------------
 #Función para borrar archivos temporales de validación (si existen)
 def borrar_archivos_temporales():
@@ -15,12 +16,22 @@ def borrar_archivos_temporales():
         ruta_justificacion_contable, #eliminar el archivo de errores por justificacion contable
         ruta_duplicados,         #eliminar el archivo de errores por duplicados
         ruta_archivo_unificado,  #eliminar el archivo de OPS unificada
-        ruta_formato_ops         #eliminar el archivo de formato OPS con datos consolidados
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):
             os.remove(ruta)
 
+#-------------------------------------------------------------------------------------------------------------
+#Función para borrar archivos de formato OPS en la carpeta de formatos (si existen)
+def borrar_archivo_carpeta_formato_ops(formatos):
+    folder_path = formatos
+    search_pattern = os.path.join(folder_path, "*.xlsx")
+    files_to_delete = glob.glob(search_pattern)
+    for file_path in files_to_delete:
+        try:
+            os.remove(file_path)
+        except OSError as e:
+            print(f"Error al eliminar {file_path}: {e}")
 #-------------------------------------------------------------------------------------------------------------
 #Función generalizada para exportar errores a Excel y lanzar excepción
 def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_name: str = "Errores") -> None:

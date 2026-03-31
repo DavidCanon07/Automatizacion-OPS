@@ -2,6 +2,8 @@ from pathlib import Path
 from datetime import datetime
 import time as t
 
+#---------------------Parametros para validación de archivos----------------------
+
 # Definición de columnas ancla para la validación de filas válidas
 columna_ancla = ['Entidad de la cuenta', 'Centro cuenta', 'numero de la cuenta', 'tipo']
 
@@ -47,6 +49,8 @@ justificacion_contable = {
     ]
 }
 
+
+#----------------Rutas y configuraciones generales----------------------
 #Configuración para búsqueda de archivos
 base_path = Path(r"C:\validador")
 carpeta_archivos = base_path / "carpetas_OPS"
@@ -67,6 +71,7 @@ def crear_carpeta_si_no_existe(base_path, carpeta_archivos, ejecucion, formatos)
 
 #Configuración para búsqueda de archivos
 clave = 'OPS'
+clave_debitos = 'Detalle_LATAM'
 exts = {'.xlsx', '.xls'}
 
 # Rutas para guardar archivos de errores y alertas
@@ -93,7 +98,7 @@ def escribir(texto, velocidad=0.01):
 
 #----------------------Parametros para la consolidación de archivos----------------------
 ruta_archivo_unificado = r"C:\validador\archivos_unificados.xlsx"
-ruta_libro_base = r"C:\validador\Estructura OPS manipular.xlsx"
+ruta_libro_base = r"C:\validador\Estructura_OPS.xlsx"
 hoja_base = "Formato OPS"
 
 #ruta carpeta con archivos retorno pos validación
@@ -135,4 +140,54 @@ MAPEO = {
     "TIPO DE DOCUMENTO": "TD",            
     "NUMERO DE DOCUMENTO": "DOCUMENTO",        
     "DIGITO DE VERIFICACION": "DV"   
+}
+
+#----------------------Parametros para consolidar los debitos----------------------
+
+ruta_archivo_debitos = r"C:\validador\archivos_debitos.xlsx"
+ruta_libro_base_debitos = r"C:\validador\Estructura_Debitos.xlsx"
+hoja_base_debitos = "LATAM"
+
+#ruta carpeta con archivos retorno pos validación
+ruta_formato_debitos = formatos / f"Detalle_LATAM_SODIMAC_FALABELLA_MERCADO PAGO_{datetime.now().strftime('%d%m%Y')}.xlsx"
+ruta_formato_debitos = str(ruta_formato_debitos)  # Convertir a string para openpyxl
+
+MAPEO_DEBITOS = {
+    'Número de Terminal':'Número de Terminal',
+    'Codigo Autorización':'Codigo Autorización',
+    'Autorización2':'Autorización2',
+    'Fecha Canje':'Fecha Canje',
+    'Fecha Comprobante':'Fecha Comprobante',
+    'Fecha Consignación':'Fecha Consignación',
+    'Franquicia':'Franquicia',
+    'Transaccion':'Transaccion',
+    'Bin Fuente':'Bin Fuente',
+    'Tipo de Deposito':'Tipo de Deposito',
+    'Tipo transacción':'Tipo transacción',
+    'Naturaleza':'Naturaleza',
+    'Cuenta consignación':'Cuenta consignación',
+    'Codigo establecimiento':'Codigo establecimiento',
+    'Número de NIT':'Número de NIT',
+    'Nombre establecimient':'Nombre establecimient',
+    'CODIGO MCC':'CODIGO MCC',
+    'Tipo de Negocio':'Tipo de Negocio',
+    'TARJETA':'TARJETA',
+    'TIPO BIN':'TIPO BIN',
+    'CHCCFT':'CHCCFT',
+    'VALOR COMPRA':'VALOR COMPRA',
+    'VALOR IVA':'VALOR IVA',
+    'VALOR PROPINA':'VALOR PROPINA',
+    'TOTAL= Venta + IVA + Propina':'TOTAL= Venta + IVA + Propina',
+    'Valor Comisión':'Valor Comisión',
+    'Rete IVA':'Rete IVA',
+    'Rete Fuente':'Rete Fuente',
+    'Rete ICA':'Rete ICA',
+    'Valor Neto':'Valor Neto',
+    'VALOR INTERCAMBIO':'VALOR INTERCAMBIO',
+    'IATA':'IATA',
+    'NOMBRE AGENCIA':'NOMBRE AGENCIA',
+    'CIUDAD AGENCIA':'CIUDAD AGENCIA',
+    'TARJETA COMPLETA':'TARJETA COMPLETA',
+    'IDENTIFICADORUNICO':'IDENTIFICADORUNICO',
+
 }

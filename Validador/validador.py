@@ -1,6 +1,7 @@
-from validacion import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_entidad_cuenta, validar_filler, validar_duplicados, validar_justificacion_contable
+from validacion import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_entidad_cuenta, validar_filler, validar_duplicados, validar_justificacion_contable, borrar_archivo_carpeta_formato_ops
 from Consolidacion import exportar_excel, cargar_estructura
-from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir, ruta_duplicados, ruta_archivo_unificado, ejecucion, ruta_libro_base, hoja_base, MAPEO, ruta_formato_ops, formatos
+from Consolidacion.Debitos import obtener_debitos, exportar_debitos
+from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir, ruta_duplicados, ruta_archivo_unificado, ejecucion, ruta_libro_base, hoja_base, MAPEO, ruta_formato_ops, formatos, clave_debitos, exts, clave, hoja_base_debitos, ruta_archivo_debitos, ruta_libro_base_debitos, MAPEO_DEBITOS, ruta_formato_debitos
 from datetime import datetime
 import os
 import zipfile
@@ -15,18 +16,22 @@ try:
     escribir("Verificando que las carpetas necesarias para el proceso existan...\n")
     crear_carpeta_si_no_existe(base_path, carpeta_archivos, ejecucion, formatos)
     # Limpiar archivos de validaciones anteriores
+    escribir("Limpiando archivos de validaciones anteriores (si existen)...\n")
     borrar_archivos_temporales()
+    escribir("Archivos temporales del paquete de la OPS (si existían).\n")
+    borrar_archivo_carpeta_formato_ops(formatos)
     while True:
         opcion = input("Selecciona una opción para continuar:"
-            "\n1. Consolidar archivos y validar archivos"
+            "\n1. Consolidar archivos OPS y validar archivos"
             "\n2. Exportar archivo unificado"
             "\n3. Montar archivo excel 'Formato OPS DDMMYYYY' con los datos consolidados"
-            "\n4. Salir\n"
+            "\n4. Consolidar Archivo Debitos 'Detalle_LATAM_SODIMAC_FALABELLA_MERCADO PAGO_DDMMYYYY'\n"
+            "5. Salir\n"
             "\nSelecciona una opción: ")
         if opcion == "1":
             # 01 - CARGA Y VALIDACIÓN DE COLUMNAS
             escribir("Ahora, vamos a cargar el archivo y validar que las columnas sean correctas...\n")
-            df = concatenar_datos()
+            df = concatenar_datos(carpeta_archivos, clave, exts)
             
             escribir("Validación de columnas completada exitosamente."
                 "\nPerfecto todo marcha bien, Empecemos la validación de campos...\n")
@@ -200,7 +205,7 @@ try:
                 # FINALIZACIÓN DEL PROCESO DE VALIDACIÓN -> valida que no tenga alertas de duplicados y que no haya errores críticos
             if os.path.exists(ruta_duplicados):
                 escribir(f"\nRevisa el archivo alertas de duplicados antes de montar el archivo en la ruta de la OPS para evitar posibles duplicados fuera del proceso normal.\n")
-                print("👀COMO SE PRESENTO UNA DUPLICIDAD Y VALIDA QUE SEA NORMAL(archivo 'ALERTAS_DUPLICADOS.xlsx')👀, DESPUES SIGUE LOS PROXIMOS PASOS:\n")
+                escribir("👀COMO SE PRESENTO UNA DUPLICIDAD Y VALIDA QUE SEA NORMAL(archivo 'ALERTAS_DUPLICADOS.xlsx')👀, DESPUES SIGUE LOS PROXIMOS PASOS:\n")
             else:
                 escribir(f"\nPerfecto! No se han encontrado errores en las validaciones(no errores críticos). Los archivos estan listos para seguir los siguientes pasos del validador\n"
                     "Recuerda revisar el archivo Log.txt y para tener la traza historica de ejecuciones.\n")
@@ -211,16 +216,16 @@ try:
                     f.write(f"\nLog de validación exitosa: {datetime.now()} - Perfecto! No se han encontrado errores en las validaciones. Los archivos estan listos para seguir los siguientes pasos del validador\n")
             continue  # Volver al menú principal para que el usuario decida qué hacer a continuación
         elif opcion == "2":
-            print("Exportando archivo unificado...")
+            escribir("Exportando archivo unificado...")
             exportar_excel(df, ruta_archivo_unificado, "Formato OPS")
-            print(f"Archivo exportado a: {ruta_archivo_unificado}")
+            escribir(f"Archivo exportado a: {ruta_archivo_unificado}")
             
             # VALIDACIÓN INMEDIATA DEL ARCHIVO EXPORTADO
             if not os.path.exists(ruta_archivo_unificado):
                 raise Exception(f"✖️ El archivo no se creó: {ruta_archivo_unificado}")
 
             tamaño = os.path.getsize(ruta_archivo_unificado)
-            print(f"✔️ Archivo creado. Tamaño: {tamaño} bytes")
+            escribir(f"✔️ Archivo creado. Tamaño: {tamaño} bytes")
 
             if tamaño == 0:
                 raise Exception(f"✖️ El archivo está vacío: {ruta_archivo_unificado}")
@@ -228,41 +233,70 @@ try:
             # Verificar que es un Excel válido (ZIP)
             try:
                 with zipfile.ZipFile(ruta_archivo_unificado, 'r') as zf:
-                    print("✔️ Archivo Excel válido (ZIP)")
+                    escribir("✔️ Archivo Excel válido (ZIP)")
             except zipfile.BadZipFile:
                 raise Exception(f"✖️ El archivo {ruta_archivo_unificado} no es un Excel válido")
         elif opcion == "3":
-            print("Montando archivo en formato 'Formato OPS'...")
+            escribir("Montando archivo en formato 'Formato OPS'...")
             
-            # 1. Verificar que el archivo unificado existe
+            # Verificar que el archivo unificado existe
             if not os.path.exists(ruta_archivo_unificado):
-                print(f"✖️ El archivo unificado no existe: {ruta_archivo_unificado}")
-                print("   Primero debes exportar el archivo unificado (opción 2)")
+                escribir(f"✖️ El archivo unificado no existe: {ruta_archivo_unificado}")
+                escribir("   Primero debes exportar el archivo unificado (opción 2)")
                 continue
             
-            # 2. Verificar que la plantilla existe
+            # Verificar que la plantilla existe
             if not os.path.exists(ruta_libro_base):
-                print(f"✖️ La plantilla no existe: {ruta_libro_base}")
+                escribir(f"✖️ La plantilla no existe: {ruta_libro_base}")
                 continue
             
-            # 3. Copiar la plantilla (limpia) al destino con el nombre con fecha
-            print(f"   Copiando plantilla limpia: {ruta_libro_base}")
-            print(f"   A: {ruta_formato_ops}")
+            # Copiar la plantilla (limpia) al destino con el nombre con fecha
+            escribir(f"   Copiando plantilla limpia: {ruta_libro_base}")
+            escribir(f"   A: {ruta_formato_ops}")
             shutil.copy2(ruta_libro_base, ruta_formato_ops)
             
-            # 4. Cargar los nuevos datos directamente (sin limpiar, porque es copia nueva)
-            print(f"   Cargando datos al archivo destino...")
-            cargar_estructura(ruta_archivo_unificado, ruta_formato_ops, hoja_base, MAPEO)
+            # Cargar los nuevos datos directamente (sin limpiar, porque es copia nueva)
+            escribir(f"   Cargando datos al archivo destino...")
+            cargar_estructura(ruta_archivo_unificado, ruta_formato_ops, hoja_base, MAPEO, fila_encabezados=8)
             
-            print(f"\nArchivo montado exitosamente:")
-            print(f"   Ubicación: {ruta_formato_ops}")
-            print(f"   Hoja: {hoja_base}")
+            escribir(f"\nArchivo montado exitosamente:")
+            escribir(f"   Ubicación: {ruta_formato_ops}")
+            escribir(f"   Hoja: {hoja_base}")
             
         elif opcion == "4":
-            print("Saliendo del programa. ¡Hasta luego!")
+            
+            # Consolida la información de los archivos de debitos
+            escribir("Consolidando archivo de debitos...")
+            df_total_debitos = obtener_debitos(carpeta_archivos, clave_debitos, exts)
+            
+            # Exportar el archivo de debitos consolidado temporal
+            escribir("Exportando archivo de debitos consolidado...")
+            exportar_debitos(df_total_debitos, ruta_archivo_debitos, hoja_base_debitos)
+            
+            #Verificar que la plantilla de debitos exista
+            if not os.path.exists(ruta_libro_base_debitos):
+                escribir(f"✖️ La plantilla de debitos no existe: {ruta_libro_base_debitos}")
+                continue
+            
+            # Copiar la plantilla (limpia) al destino con el nombre con fecha
+            escribir(f"   Copiando plantilla limpia: {ruta_libro_base_debitos}")
+            escribir(f"   A: {ruta_formato_debitos}")
+            shutil.copy2(ruta_libro_base_debitos, ruta_formato_debitos)
+            
+            # Cargar los nuevos datos directamente (sin limpiar, porque es copia nueva)
+            escribir(f"   Cargando datos al archivo destino de debitos...")
+            cargar_estructura(ruta_archivo_debitos, ruta_formato_debitos, hoja_base_debitos, MAPEO_DEBITOS, fila_encabezados=1)
+            
+            escribir(f"\nArchivo de debitos montado exitosamente:")
+            escribir(f"   Ubicación: {ruta_formato_debitos}")
+            escribir(f"   Hoja: {hoja_base_debitos}")
+            
+            
+        elif opcion == "5":
+            escribir("Saliendo del programa. ¡Hasta luego!")
             exit()
         else:
-            print("Opción no válida. Por favor, selecciona 1, 2, 3 o 4.")
+            escribir("Opción no válida. Por favor, selecciona 1, 2, 3 o 4.")
     
 
 #------------------------------------------------------------------------------

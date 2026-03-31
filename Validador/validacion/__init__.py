@@ -2,4 +2,4 @@
 
 from validacion.carga import concatenar_datos
 from validacion.validaciones import validar_largo_campos, validar_campos_vacios, validar_columna_tipo, validar_redondeo_valores, validar_inicio_numero_cuenta, validar_entidad_cuenta, validar_filler, validar_duplicados, validar_justificacion_contable
-from validacion.reportes import borrar_archivos_temporales,exportar_errores
+from validacion.reportes import borrar_archivos_temporales,exportar_errores, borrar_archivo_carpeta_formato_ops
