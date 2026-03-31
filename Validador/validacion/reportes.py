@@ -1,0 +1,44 @@
+import os
+import pandas as pd
+from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado, ruta_formato_ops
+#-------------------------------------------------------------------------------------------------------------
+#Función para borrar archivos temporales de validación (si existen)
+def borrar_archivos_temporales():
+    archivos_temporales = [
+        ruta_error_largo_campos, #eliminar el archivo de errores de largo de campos
+        ruta_columna_tipo,       #eliminar el archivo de errores de columna tipo
+        ruta_alertas,            #eliminar el archivo de alertas de campos vacíos
+        ruta_redondeo,           #eliminar el archivo de errores de redondeo en campos de valor
+        ruta_inicio_campo,       #eliminar el archivo de errores por número de cuenta
+        ruta_entidad_cuenta,     #eliminar el archivo de errores por entidad de cuenta
+        ruta_filler,             #eliminar el archivo de errores por filler
+        ruta_justificacion_contable, #eliminar el archivo de errores por justificacion contable
+        ruta_duplicados,         #eliminar el archivo de errores por duplicados
+        ruta_archivo_unificado,  #eliminar el archivo de OPS unificada
+        ruta_formato_ops         #eliminar el archivo de formato OPS con datos consolidados
+    ]
+    for ruta in archivos_temporales:
+        if os.path.exists(ruta):
+            os.remove(ruta)
+
+#-------------------------------------------------------------------------------------------------------------
+#Función generalizada para exportar errores a Excel y lanzar excepción
+def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_name: str = "Errores") -> None:
+    df_errores = df_errores.copy()
+    df_errores.index = df_errores.index + 8
+    df_errores = df_errores.sort_index()
+
+    #Crear carpeta si no existe
+    os.makedirs(os.path.dirname(ruta), exist_ok=True)
+
+    with pd.ExcelWriter(ruta, engine="openpyxl", mode="w") as writer:
+        df_errores.to_excel(
+            writer,
+            sheet_name=sheet_name,
+            index=True,
+            index_label="Fila en Excel"
+        )
+
+    raise Exception(mensaje)
+
+#-------------------------------------------------------------------------------------------------------------
