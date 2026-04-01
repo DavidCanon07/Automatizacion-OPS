@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado
+from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado, ruta_archivo_debitos, ruta_archivo_plano_txt
 #-------------------------------------------------------------------------------------------------------------
 #Función para borrar archivos temporales de validación (si existen)
 def borrar_archivos_temporales():
@@ -16,6 +16,8 @@ def borrar_archivos_temporales():
         ruta_justificacion_contable, #eliminar el archivo de errores por justificacion contable
         ruta_duplicados,         #eliminar el archivo de errores por duplicados
         ruta_archivo_unificado,  #eliminar el archivo de OPS unificada
+        ruta_archivo_debitos,    #eliminar el archivo de débitos unificado
+        ruta_archivo_plano_txt,  #eliminar el archivo plano de OPS
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):
@@ -26,6 +28,17 @@ def borrar_archivos_temporales():
 def borrar_archivo_carpeta_formato_ops(formatos):
     folder_path = formatos
     search_pattern = os.path.join(folder_path, "*.xlsx")
+    files_to_delete = glob.glob(search_pattern)
+    for file_path in files_to_delete:
+        try:
+            os.remove(file_path)
+        except OSError as e:
+            print(f"Error al eliminar {file_path}: {e}")
+            
+#---------------------
+def borrar_carpeta_comprimido(formatos):
+    folder_path = formatos
+    search_pattern = os.path.join(folder_path, "*.zip")
     files_to_delete = glob.glob(search_pattern)
     for file_path in files_to_delete:
         try:

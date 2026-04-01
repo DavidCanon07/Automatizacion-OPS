@@ -1,7 +1,11 @@
-from validacion import concatenar_datos, validar_largo_campos, validar_columna_tipo, validar_campos_vacios, validar_redondeo_valores, borrar_archivos_temporales, validar_inicio_numero_cuenta, validar_entidad_cuenta, validar_filler, validar_duplicados, validar_justificacion_contable, borrar_archivo_carpeta_formato_ops
+from validacion import *
+from validacion.utils import *
 from Consolidacion import exportar_excel, cargar_estructura
 from Consolidacion.Debitos import obtener_debitos, exportar_debitos
-from Configuracion_parametros import ruta_error_txt, crear_carpeta_si_no_existe, base_path, carpeta_archivos, log_exitoso, escribir, ruta_duplicados, ruta_archivo_unificado, ejecucion, ruta_libro_base, hoja_base, MAPEO, ruta_formato_ops, formatos, clave_debitos, exts, clave, hoja_base_debitos, ruta_archivo_debitos, ruta_libro_base_debitos, MAPEO_DEBITOS, ruta_formato_debitos
+from Consolidacion.Solicitud_ops import *
+from Consolidacion.comprimir import comprimir_excel
+from Configuracion_parametros import *
+from preguntas import *
 from datetime import datetime
 import os
 import zipfile
@@ -9,42 +13,49 @@ import shutil
 
 
 try:
-
+    escribir("Bienvenido al programa🗝️VALIDADOR🗝️ de archivos para OPS. Este proceso te ayudará a validar y consolidar tus archivos de manera eficiente y confiable.\n")
     escribir("Iniciando proceso de validación de archivos para OPS...\n"
             "Primero, vamos a asegurarnos de que las carpetas necesarias para el proceso existan y estén listas para recibir los archivos...\n")
     # Crear carpetas necesarias para el proceso (si no existen)
     escribir("Verificando que las carpetas necesarias para el proceso existan...\n")
-    crear_carpeta_si_no_existe(base_path, carpeta_archivos, ejecucion, formatos)
+    crear_carpeta_si_no_existe(base_path, carpeta_archivos, ejecucion, formatos, estructura)
+    # Validar estructuras base para la consolidación (si no existen, copiarlas desde la ruta_base_estructuras)
+    validar_estructuras(ruta_libro_base, ruta_libro_base_debitos, ruta_libro_base_solicitud, formato_ops, formato_debitos, formato_solicitud)
     # Limpiar archivos de validaciones anteriores
     escribir("Limpiando archivos de validaciones anteriores (si existen)...\n")
     borrar_archivos_temporales()
     escribir("Archivos temporales del paquete de la OPS (si existían).\n")
     borrar_archivo_carpeta_formato_ops(formatos)
+    
+    borrar_carpeta_comprimido(formatos)
+    # Validar requisitos mínimos para la consolidación
+    validar_requisitos_consolidacion()
     while True:
-        opcion = input("Selecciona una opción para continuar:"
+        
+        opcion = input("\nSelecciona una opción para continuar:"
             "\n1. Consolidar archivos OPS y validar archivos"
             "\n2. Exportar archivo unificado"
             "\n3. Montar archivo excel 'Formato OPS DDMMYYYY' con los datos consolidados"
             "\n4. Consolidar Archivo Debitos 'Detalle_LATAM_SODIMAC_FALABELLA_MERCADO PAGO_DDMMYYYY'\n"
-            "5. Salir\n"
+            "5. Llenar archivo 'Solicitud OPS DDMMYYYY'\n"
+            "6. Generar archivo plano 'OPS DDMMYYYY'\n"
+            "7. Comprimir archivo 'Formato OPS DDMMYYYY'\n"
+            "8. Salir"
             "\nSelecciona una opción: ")
         if opcion == "1":
             # 01 - CARGA Y VALIDACIÓN DE COLUMNAS
             escribir("Ahora, vamos a cargar el archivo y validar que las columnas sean correctas...\n")
             df = concatenar_datos(carpeta_archivos, clave, exts)
-            
             escribir("Validación de columnas completada exitosamente."
                 "\nPerfecto todo marcha bien, Empecemos la validación de campos...\n")
-                # 02 - VALIDACIÓN DE LARGO DE CAMPOS
+            # 02 - VALIDACIÓN DE LARGO DE CAMPOS
             try:
                 escribir("Validando largo de campos...\n")
                 validar_largo_campos(df)
-                
             except Exception as e:
                 error_msg = str(e)
                 escribir("Vaya! Se han encontrado errores en la validación de largo de campos.\n")
                 escribir(error_msg)
-                
                 with open(
                     ruta_error_txt,
                     "a", encoding="utf-8"
@@ -53,19 +64,15 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                     
                 exit()
-
             # 03 - VALIDACIÓN DE CAMPOS ESPECÍFICOS (Ejemplo: columna 'tipo')
             try:
                 
                 escribir("Validando valores de columna 'tipo'...\n")
                 validar_columna_tipo(df)
-
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Ups! Se han encontrado errores en la validación de la columna 'tipo'.\n")
                 escribir(error_msg)
-
                 with open(
                     ruta_error_txt,
                     "a", encoding="utf-8"
@@ -76,12 +83,10 @@ try:
                 exit()
             #04 - VALIDACIÓN DE CAMPOS VACÍOS
             try:
-                
                 escribir("Validando campos vacíos...\n")
                 validar_campos_vacios(df)
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Oh no! Se han encontrado campos vacíos que requieren atención.\n")
                 escribir(error_msg)
             # En este caso, como es una validación de alertas (no errores críticos), se registran los campos vacíos encontrados pero no se detiene el proceso. Se asume que el usuario revisará el archivo de alertas generado para corregir estos campos antes de montar el archivo en la ruta de la OPS.
@@ -91,14 +96,12 @@ try:
                 ) as f:
                     f.write("\n-------04 - Validación de campos vacíos.--------\n")
                     f.write(f"\nLog de alerta: {datetime.now()} - {error_msg}\n")
-
             #05 VALIDACIÓN DE DECIMALES EN CAMPOS DE VALOR
             try:
                 escribir("Validando redondeo de valores en campos de valor...\n")
                 validar_redondeo_valores(df)
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("valores con decimales que no estan redondeados a 2 decimales Detectados.\n")
                 escribir(error_msg)
                 with open(
@@ -109,7 +112,6 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                 
                 exit()
-            
             #06 VALIDACIÓN DE INICIO DE CAMPO NUMERO DE CUENTA
             try:
                 escribir("Validando inicio de campo 'numero de la cuenta'...\n")
@@ -128,15 +130,12 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                     
                 exit()
-                
             #07 VALIDACIÓN DE ENTIDAD CUENTA
             try:
                 escribir("Validando el campo 'entidad de la cuenta'...\n")
                 validar_entidad_cuenta(df)
-                
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Se encontraron valores no permitidos en la columna 'entidad de la cuenta' (diferentes de 0013).\n")
                 escribir(error_msg)
                 with open(
@@ -147,15 +146,12 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                     
                 exit()
-                
             #08 VALIDACIÓN DE FILLER
             try:
                 escribir("Validando el campo 'filler'...\n")
                 validar_filler(df)
-                
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Se encontraron valores no permitidos en la columna 'filler' (diferentes de 0).\n")
                 escribir(error_msg)
                 with open(
@@ -166,15 +162,12 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                     
                 exit()
-                
             #09 VALIDACIÓN DE TIPO
             try:
                 escribir("Validando el campo 'justificacion contable' sea coincidente con el campo 'tipo'...\n")
                 validar_justificacion_contable(df)
-                
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Se encontraron valores no permitidos y/o no coincidentes en la columna 'justificacion contable' con el campo 'tipo' (diferentes a los establecidos).\n")
                 escribir(error_msg)
                 with open(
@@ -185,15 +178,12 @@ try:
                     f.write(f"\nLog de error: {datetime.now()} - {error_msg}\n")
                     
                 exit()
-                
             # VALIDACIÓN DE DUPLICADOS
             try:
                 escribir("Validando la tapa de OPS para verificar duplicados...\n")
                 validar_duplicados(df)
-                
             except Exception as e:
                 error_msg = str(e)
-                
                 escribir("Se encontraron valores duplicados -> 🚧¡REVISA TU ARCHIVO ANTES DE MONTAR EN LA RUTA! Se pueden encontrar transacciones duplicadas fuera del proceso habitual.🚧\n")
                 escribir(error_msg)
                 with open(
@@ -293,27 +283,52 @@ try:
             
             
         elif opcion == "5":
-            escribir("Saliendo del programa. ¡Hasta luego!")
+            # Verificar que la plantilla de solicitud exista
+            if not os.path.exists(ruta_libro_base_solicitud):
+                escribir(f"✖️ La plantilla de solicitud no existe: {ruta_libro_base_solicitud}")
+                continue
+            
+            # Copiar la plantilla (limpia) al destino con el nombre con fecha
+            escribir(f"   Copiando plantilla limpia: {ruta_libro_base_solicitud}")
+            escribir(f"   A: {ruta_solicitud_ops}")
+            shutil.copy2(ruta_libro_base_solicitud, ruta_solicitud_ops)
+            
+            
+            escribir("Llenando archivo 'Solicitud OPS DDMMYYYY'...")
+            obtener_solicitud_ops(ruta_formato_ops, ruta_solicitud_ops, hoja_base, hoja_base_solicitud,  MAPEO_SOLICITUD, arreglo_fecha)
+            
+            # Extraer cuentas y descripciones para llenar la solicitud OPS
+            extraer_cuentas_y_descripciones(ruta_formato_ops, ruta_solicitud_ops, hoja_base, hoja_base_solicitud, celda_descripcion="D32", celda_cuentas="D26", celda_codigo_MIR="D23", columna_inicio=10, fila_inicio=9, separador="\n", separador_codigo_MIR=" - ")
+            
+            escribir(f"\nArchivo de solicitud montado exitosamente:")
+            escribir(f"   Ubicación: {ruta_solicitud_ops}")
+            escribir(f"   Hoja: {hoja_base_solicitud}")
+            
+        elif opcion == "6":
+            escribir("Generando archivo plano 'OPS DDMMYYYY'...")
+            
+            exportar_txt_limpio(ruta_formato_ops, hoja_base, "R", ruta_archivo_plano_txt)
+            
+            escribir(f"\nArchivo plano generado exitosamente:")
+            escribir(f"   Ubicación: {ruta_archivo_plano_txt}")
+        elif opcion == "7":
+            escribir("Comprimiendo archivo 'Formato OPS DDMMYYYY'...")
+            comprimir_excel(ruta_formato_ops, formatos)
+        elif opcion == "8":
+            escribir("Saliendo del programa 🗝️VALIDADOR🗝️. ¡Hasta luego!")
             exit()
         else:
-            escribir("Opción no válida. Por favor, selecciona 1, 2, 3 o 4.")
-    
-
-#------------------------------------------------------------------------------
-
-
+            escribir("Opción no válida. Por favor, selecciona 1, 2, 3, 4, 5 o 6.")
 #------------------------------------------------------------------------------
 # EXCEPCIÓN GENERAL (ERRORES DE INGESTA O COLUMNAS)
 except Exception as e:
     escribir("\n✕ ERROR DURANTE EL PROCESO DE VALIDACIÓN\n")
     escribir(str(e))
-    
     with open(
         ruta_error_txt,
         "a", encoding="utf-8"
     ) as f:
         f.write("\n-------01 - Validación de columnas Y entrada de archivos.--------\n")
         f.write(f"\nLog de error: {datetime.now()} - {e}\n")
-        
     escribir("El error ha sido registrado en errores.txt")
     exit()
