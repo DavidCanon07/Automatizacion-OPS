@@ -1,8 +1,8 @@
 from pathlib import Path
 import pandas as pd
 import time as t
-from Configuracion_parametros import escribir, columna_ancla
-from validacion.utils import formatea_nombre_columna
+from Configuracion_parametros import columna_ancla
+from validacion.utils import formatea_nombre_columna, escribir
 from Configuracion_parametros import Campos_a_validar
 
 #-------------------------------------------------------------------------------------------------------------

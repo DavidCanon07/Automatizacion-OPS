@@ -1,6 +1,4 @@
 from pathlib import Path
-from validacion.utils import escribir
-import time as t
 from datetime import datetime
 
 #---------------------Parametros para validación de archivos----------------------

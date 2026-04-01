@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import time as t
-from Configuracion_parametros import escribir
+from validacion.utils import escribir
 
 
 

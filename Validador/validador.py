@@ -13,7 +13,10 @@ import shutil
 
 
 try:
-    escribir("Bienvenido al programa🗝️VALIDADOR🗝️ de archivos para OPS. Este proceso te ayudará a validar y consolidar tus archivos de manera eficiente y confiable.\n")
+    print("="*60)
+    escribir(f"\nBienvenido al programa🗝️VALIDADOR🗝️ de archivos para OPS.\n".upper())
+    print("="*60)
+    escribir("\nEste proceso te ayudará a validar y consolidar tus archivos de manera eficiente y confiable.\n")
     escribir("Iniciando proceso de validación de archivos para OPS...\n"
             "Primero, vamos a asegurarnos de que las carpetas necesarias para el proceso existan y estén listas para recibir los archivos...\n")
     # Crear carpetas necesarias para el proceso (si no existen)
@@ -26,13 +29,14 @@ try:
     borrar_archivos_temporales()
     escribir("Archivos temporales del paquete de la OPS (si existían).\n")
     borrar_archivo_carpeta_formato_ops(formatos)
-    
     borrar_carpeta_comprimido(formatos)
+    
+    print("="*85)
     # Validar requisitos mínimos para la consolidación
     validar_requisitos_consolidacion()
     while True:
-        
-        opcion = input("\nSelecciona una opción para continuar:"
+        print("\n" + "="*85)
+        opcion = input(f"\nSelecciona una opción para continuar:"
             "\n1. Consolidar archivos OPS y validar archivos"
             "\n2. Exportar archivo unificado"
             "\n3. Montar archivo excel 'Formato OPS DDMMYYYY' con los datos consolidados"

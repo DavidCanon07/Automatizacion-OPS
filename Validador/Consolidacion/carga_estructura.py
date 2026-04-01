@@ -1,7 +1,5 @@
 import os
-import pandas as pd
 from openpyxl import load_workbook, Workbook
-from openpyxl.styles import PatternFill, Font
 
 def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO, fila_encabezados=8):
     """

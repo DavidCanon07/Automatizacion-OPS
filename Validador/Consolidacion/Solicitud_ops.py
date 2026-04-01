@@ -1,7 +1,6 @@
 from openpyxl import load_workbook
-from Configuracion_parametros import escribir
+from validacion.utils import escribir
 import win32com.client as win32
-import pandas as pd
 
 def obtener_solicitud_ops(origen_path, destino_path, hoja_origen, hoja_destino, mapeo_celdas, fecha_actual):
     

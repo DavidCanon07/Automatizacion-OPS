@@ -1,6 +1,7 @@
 import pandas as pd
-from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, justificacion_contable, ruta_justificacion_contable
+from Configuracion_parametros import Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, justificacion_contable, ruta_justificacion_contable
 from validacion.reportes import exportar_errores 
+from validacion.utils import escribir
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para validar el largo de campos específicos
