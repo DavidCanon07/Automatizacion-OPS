@@ -11,7 +11,7 @@ Campos_a_validar = ['Unnamed: 0','Unnamed: 1','Entidad de la cuenta','Centro cue
 
 
 # Configuración de validación de largo de campos (longitud máxima permitida)
-largo_campos = {'Entidad de la cuenta': 4, 'Centro cuenta': 4, 'filler': 1, 'numero de la cuenta': 9,'tipo': 1, 'Cuenta a afectar': 20, 'Cuentas contables contrapartida': (9,12),'TIPO DE DOCUMENTO': 1, 'DIGITO DE VERIFICACION': 1}
+largo_campos = {'Entidad de la cuenta': 4, 'Centro cuenta': 4, 'filler': 1, 'numero de la cuenta': 9,'tipo': 1, 'Cuenta a afectar': 20, 'Cuentas contables contrapartida': [9,12],'TIPO DE DOCUMENTO': 1, 'DIGITO DE VERIFICACION': 1}
 
 #Conceptos atados a la justificación y tipo de ajuste
 justificacion_contable = {
@@ -56,17 +56,20 @@ carpeta_archivos = base_path / "carpetas_OPS"
 ejecucion = base_path / "Control de ejecuciones"
 estructura = base_path / "Estructuras"
 formatos = base_path / "Archivos OPS"
+historico = base_path / "Historico"
 
 
 
 #Configuración para búsqueda de archivos
 clave = 'OPS'
+omitir = ['soporte OPS', 'soportes OPS', 'nueva OPS', 'CHECK LIST OPS']
 clave_debitos = 'Detalle_LATAM'
-exts = {'.xlsx', '.xls'}
+exts = {'.xlsx', '.xls', '.xlsb', '.xlsm'}
 
 # Rutas para guardar archivos de errores y alertas
 ruta_error_txt = r"C:\validador\Control de ejecuciones\errores.txt"
 log_exitoso = r"C:\validador\Control de ejecuciones\log.txt"
+
 #ruta carpeta con archivos retorno pos validación
 ruta_error_largo_campos = r"C:\validador\02 - errores_largo_campos.xlsx"
 ruta_columna_tipo = r"C:\validador\03 - errores_columna_tipo.xlsx"
@@ -208,3 +211,22 @@ ruta_base_estructuras = r"C:\Programa_validador\estructuras_base"
 formato_ops = Path(ruta_base_estructuras) / "Estructura_Formato_OPS.xlsx"
 formato_debitos = Path(ruta_base_estructuras) / "Estructura_Debitos.xlsx"
 formato_solicitud = Path(ruta_base_estructuras) / "Estructura_Solicitud_OPS.xlsx"
+archivo_historico = Path(ruta_base_estructuras) / "historico_OPS.xlsx"
+
+
+#----------------------parametros para historico_resumen----------------------
+
+ruta_consolidado_historico = r"C:\validador\Historico\historico_OPS.xlsx"
+Hoja_base_historico = "Historico OPS"
+
+ruta_retorno_duplicados = base_path / f"ALERTA_DUPLICADOS_historico {datetime.now().strftime('%d-%m-%Y')}.xlsx"
+ruta_retorno_duplicados = str(ruta_retorno_duplicados)
+
+#-----------------------Parametros para Lectura directa desde ruta (automatización de ingesta)-----------------------
+
+ruta_origen_cifrado = r"C:\Programa_validador"
+ruta_dinamica = Path(ruta_origen_cifrado) / f"OPS {datetime.now().strftime('%d-%m-%Y')}"
+ruta_dinamica = str(ruta_dinamica)
+
+ruta_destino_desktop = r"C:\validador\carpetas_OPS"
+ruta_destino_desktop = str(ruta_destino_desktop)

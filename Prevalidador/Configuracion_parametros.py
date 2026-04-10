@@ -9,39 +9,38 @@ Campos_a_validar = ['Unnamed: 0','Unnamed: 1','Entidad de la cuenta','Centro cue
 
 
 # Configuración de validación de largo de campos (longitud máxima permitida)
-largo_campos = {'Entidad de la cuenta': 4, 'Centro cuenta': 4, 'filler': 1, 'numero de la cuenta': 9,'tipo': 1, 'Cuenta a afectar': 20, 'Cuentas contables contrapartida': (9,12),'TIPO DE DOCUMENTO': 1, 'DIGITO DE VERIFICACION': 1}
+largo_campos = {'Entidad de la cuenta': 4, 'Centro cuenta': 4, 'filler': 1, 'numero de la cuenta': 9,'tipo': 1, 'Cuenta a afectar': 20, 'Cuentas contables contrapartida': [9,12],'TIPO DE DOCUMENTO': 1, 'DIGITO DE VERIFICACION': 1}
 
 #Conceptos atados a la justificación y tipo de ajuste
 justificacion_contable = {
     "N": [
         "CARGO AJUSTE POR NUEVO MODELO DE RECUPERACIONES",
-        "Cargo depositos electronicos",
-        "Cargo devolución QR",
-        "Cargo no aplicado por tx internacional CUENTA 400",
+        "CARGO DEPOSITOS ELECTRONICOS",
+        "CARGO DEVOLUCION QR",
+        "CARGO NO APLICADO POR TX INTERNACIONAL CUENTA 400",
         "CARGO POR DOBLE ABONO A LA TARJETA",
         "CARGO POR TRANSFERENCIA ERRADA",
-        "Cargo reembolsos",
-        "Cargo reliquidación comisiones",
+        "CARGO REEMBOLSOS",
+        "CARGO RELIQUIDACION COMISIONES",
         "CARGO REVERSO PAGO",
         "CARGO SALDO A FAVOR",
         "CARGO SALDO A FAVOR ADELANTO DE NOMINA",
         "CARGOS",
-        "RECUPERACION TRXS PENDIENTE DE COBRO A CLIENTES",
-        "APLICATIVO CONCISO"
+        "RECUPERACION TRXS PENDIENTE DE COBRO A CLIENTES, APLICATIVO CONCISO"
     ],
     "P": [
         "ABONO AJUSTE POR NUEVO MODELO DE RECUPERACIONES",
-        "Abono depositos electronicos",
-        "Abono devolución QR",
+        "ABONO DEPOSITOS ELECTRONICOS",
+        "ABONO DEVOLUCION QR",
         "ABONO POR REVERSO PAGO NACIONAL AUTORIZACION",
         "ABONO RECLAMO ATM",
-        "Abono reembolsos",
-        "Abono reliquidación comisiones",
+        "ABONO REEMBOLSOS",
+        "ABONO RELIQUIDACION COMISIONES",
         "ABONO SALDO A FAVOR",
         "ABONO REVERSO PAGO",
         "ABONO SALDO A FAVOR ADELANTO DE NOMINA",
         "ABONOS",
-        "Abonos Reclamacion",
+        "ABONOS RECLAMACION",
         "DEVOLUCION INTERN VISA",
         "REINTEGRO TRANSFERENCIA P2P SIN COMPENSAR"
     ]
@@ -85,6 +84,3 @@ def escribir(texto, velocidad=0.01):
         print(char, end="", flush=True)
         t.sleep(velocidad)
     print()  # Salto de línea solo al final
-
-
-

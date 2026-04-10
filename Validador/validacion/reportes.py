@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-from Configuracion_parametros import ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, log_exitoso, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, ruta_justificacion_contable, ruta_archivo_unificado, ruta_archivo_debitos, ruta_archivo_plano_txt
+from Configuracion_parametros import *
 #-------------------------------------------------------------------------------------------------------------
 #Función para borrar archivos temporales de validación (si existen)
 def borrar_archivos_temporales():
@@ -18,6 +18,7 @@ def borrar_archivos_temporales():
         ruta_archivo_unificado,  #eliminar el archivo de OPS unificada
         ruta_archivo_debitos,    #eliminar el archivo de débitos unificado
         ruta_archivo_plano_txt,  #eliminar el archivo plano de OPS
+        ruta_retorno_duplicados,  #eliminar el archivo de alerta duplicados
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):
@@ -47,7 +48,7 @@ def borrar_carpeta_comprimido(formatos):
             print(f"Error al eliminar {file_path}: {e}")
 #-------------------------------------------------------------------------------------------------------------
 #Función generalizada para exportar errores a Excel y lanzar excepción
-def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_name: str = "Errores") -> None:
+def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_name: str = "Errores", index = True) -> None:
     df_errores = df_errores.copy()
     df_errores.index = df_errores.index + 8
     df_errores = df_errores.sort_index()
@@ -59,7 +60,7 @@ def exportar_errores(df_errores: pd.DataFrame, ruta: str, mensaje: str, sheet_na
         df_errores.to_excel(
             writer,
             sheet_name=sheet_name,
-            index=True,
+            index=index,
             index_label="Fila en Excel"
         )
 

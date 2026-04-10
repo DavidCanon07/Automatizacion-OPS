@@ -1,7 +1,11 @@
 import os
 from openpyxl import load_workbook, Workbook
+import shutil
+from pathlib import Path
+from validacion.utils import escribir
+from datetime import datetime
 
-def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO, fila_encabezados=8):
+def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO, fila_encabezados_destino=8, fila_encabezados_origen=1):
     """
     Carga datos desde un archivo unificado a una plantilla base
     
@@ -30,6 +34,7 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
     wb_original = load_workbook(ruta_archivo_unificado, read_only=True, data_only=True)
     ws_original = wb_original.active
     
+    
     # 2. Abrir archivo destino
     wb_base = load_workbook(ruta_libro_base)
     
@@ -41,7 +46,7 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
     
     # 3. Leer encabezados del origen (siempre fila 1)
     encabezados_origen = []
-    for cell in ws_original[1]:
+    for cell in ws_original[fila_encabezados_origen]:
         encabezados_origen.append(str(cell.value or "").strip())
     
     print(f"Encabezados ORIGEN ({len(encabezados_origen)}): {encabezados_origen[:5]}...")
@@ -49,14 +54,14 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
     # 4. Leer encabezados del destino (fila especificada)
     encabezados_destino = []
     # Obtener la fila específica (openpyxl usa 1-indexed)
-    for cell in ws_base[fila_encabezados]:
+    for cell in ws_base[fila_encabezados_destino]:
         encabezados_destino.append(str(cell.value or "").strip())
     
-    print(f"Encabezados DESTINO (fila {fila_encabezados}): {encabezados_destino[:5]}...")
+    print(f"Encabezados DESTINO (fila {fila_encabezados_destino}): {encabezados_destino[:5]}...")
     
     # 5. Verificar que hay encabezados
     if not any(encabezados_destino):
-        raise Exception(f"No se encontraron encabezados en la fila {fila_encabezados} de {ruta_libro_base}")
+        raise Exception(f"No se encontraron encabezados en la fila {fila_encabezados_destino} de {ruta_libro_base}")
     
     # 6. Validar mapeos
     mapeos_validos = 0
@@ -68,13 +73,13 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
             if col_o not in encabezados_origen:
                 print(f"   Columna origen '{col_o}' no encontrada")
             if col_d not in encabezados_destino:
-                print(f"   Columna destino '{col_d}' no encontrada en fila {fila_encabezados}")
+                print(f"   Columna destino '{col_d}' no encontrada en fila {fila_encabezados_destino}")
     
     if mapeos_validos == 0:
         raise Exception("✖️ Ningún mapeo es válido. Verifica los nombres de las columnas.")
     
     # 7. Encontrar primera fila libre (después de la fila de encabezados)
-    fila_inicio = fila_encabezados + 1
+    fila_inicio = fila_encabezados_destino + 1
     fila_libre = fila_inicio
     
     # Buscar si ya hay datos en la primera fila de datos
@@ -109,6 +114,8 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
         # Mostrar progreso cada 100 filas
         if filas_procesadas % 100 == 0:
             print(f"   Procesando fila {filas_procesadas}...")
+            
+        filas_totales_finales = fila_libre - 1
     
     # 9. Guardar
     wb_base.save(ruta_libro_base)
@@ -118,5 +125,32 @@ def cargar_estructura(ruta_archivo_unificado, ruta_libro_base, hoja_base, MAPEO,
     print(f"\nRESULTADO:")
     print(f"   Filas procesadas desde origen: {filas_procesadas}")
     print(f"   Filas copiadas al destino: {copiadas}")
+    print(f"   Filas totales finales: {filas_totales_finales} ")
     print(f"   Archivo guardado: {ruta_libro_base}")
+    
     print("="*50)
+    
+# Función para copiar y pegar la OPS del día
+def copiar_carpeta_ops(ruta_carpeta_origen, ruta_carpeta_destino):
+    
+    # Eliminar la carpeta de destino si ya existe
+    try:
+        shutil.rmtree(ruta_carpeta_destino, ignore_errors=True)
+    except OSError as e:
+        print(f"Error al eliminar la carpeta: {str(e)}")
+    
+    
+    try:
+        # Copiar la carpeta
+        shutil.copytree(ruta_carpeta_origen, ruta_carpeta_destino, dirs_exist_ok=True)
+        escribir(f"✔️ se elimino con exito la carpeta en la ruta: {ruta_carpeta_destino} y se copio la carpeta en la ruta: {ruta_carpeta_origen}\n")
+    except shutil.Error as e:
+        print(f"Error al copiar la carpeta: {str(e)}, revisa que la carpeta se llame 'OPS {datetime.now().strftime('%d-%m-%Y')}' y que se encuentre en la ruta parametrizada.")
+        
+        exit()
+    except OSError as e:
+        print(f"Error al copiar la carpeta: {str(e)}, revisa que la carpeta se llame 'OPS {datetime.now().strftime('%d-%m-%Y')}' y que se encuentre en la ruta parametrizada. ")
+        
+        exit()
+        
+# Función para obtener tabla dinamica 

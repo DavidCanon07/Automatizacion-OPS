@@ -1,4 +1,7 @@
 from validacion.utils import escribir
+from validacion.validaciones import * 
+from datetime import datetime
+
 
 def validar_requisitos_consolidacion():
     while True:
@@ -25,4 +28,14 @@ def validar_requisitos_consolidacion():
                 else:
                     escribir("Selecciona una opcion valida.")
                     continue
+            while True:
+                    opcion = input(f"¿En la ruta de cifrado/Carpetas cargas masivas se encuentra la carpeta llamada 'OPS {datetime.now().strftime('%d-%m-%Y')}'?\n (S/N): ")
+                    if opcion == "S" or opcion == "s":
+                        break
+                    elif opcion == "N" or opcion == "n":
+                        escribir(f"Por favor, asegúrate de que la carpeta de cifrado se llame 'OPS {datetime.now().strftime('%d-%m-%Y')}' para que el validador pueda tomarla correctamente durante la consolidación y validación.")
+                    else:
+                        escribir("Selecciona una opcion valida.")
+                        continue
             break
+

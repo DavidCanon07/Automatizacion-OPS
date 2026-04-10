@@ -14,7 +14,6 @@ def borrar_archivos_temporales():
         ruta_filler,             #eliminar el archivo de errores por filler
         ruta_justificacion_contable, #eliminar el archivo de errores por justificacion contable
         ruta_duplicados,         #eliminar el archivo de errores por duplicados
-        log_exitoso              #eliminar el archivo de log de validación exitosa
     ]
     for ruta in archivos_temporales:
         if os.path.exists(ruta):

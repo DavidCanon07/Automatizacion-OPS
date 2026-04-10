@@ -62,13 +62,13 @@ def recortar_footer_dinamico(df):
 
     if filas_validas.any():
         ultima_fila_valida = filas_validas[::-1].idxmax()
-        return df.loc[:ultima_fila_valida]
+        return df.iloc[:ultima_fila_valida + 1]  # Incluir la última fila válida
 
     return df.iloc[0:0]  # DataFrame vacío si no hay filas válidas
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para obtener los datos de los archivos que cumplen con la clave y extensión, aplicando validación de columnas y recorte de footer dinámico.
-def obtener_datos(carpeta_archivos, clave, exts):
+def obtener_datos(carpeta_archivos, clave, exts, omitir):
     """
     Busca archivos recursivamente en todas las subcarpetas que contengan la palabra clave
     """
@@ -78,22 +78,46 @@ def obtener_datos(carpeta_archivos, clave, exts):
     try:    
         # Recorrer TODAS las subcarpetas y archivos recursivamente
         for archivo in ruta_base.rglob("*"):  # rglob busca recursivamente
-            if archivo.is_file() and archivo.suffix.lower() in exts and str(clave).lower() in archivo.stem.lower():
+            if archivo.is_file() and archivo.suffix.lower() in exts and str(clave).lower() in archivo.stem.lower() and not any(om.lower() in archivo.stem.lower() for om in omitir):
                 # Obtener información de la carpeta
                 carpeta_nombre = archivo.parent.name  # nombre de la carpeta
-                
                 escribir(f"Carpeta: {carpeta_nombre}")
                 escribir(f"Archivo encontrado: {archivo.name}")
-                t.sleep(0.5)
                 
-                df = pd.read_excel(archivo, skiprows=6, dtype=str)
+                extension = archivo.suffix.lower()
+                try:
+                    if extension == ".xlsb":
+                        try:
+                            df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='calamine')
+                            escribir("Archivo .xlsb leído con éxito usando 'calamine'")
+                        except ImportError:
+                            df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='pyxlsb')
+                            escribir("Archivo .xlsb leído con éxito usando 'pyxlsb'")
+                    elif extension in [".xlsx", ".xlsm"]:
+                        df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='openpyxl')
+                        escribir(f"Archivo {extension} leído con éxito usando 'openpyxl'")
+                    else:
+                        df = pd.read_excel(archivo, skiprows=6, dtype=str)
+                        escribir(f"Archivo {extension} leído con éxito usando el motor por defecto")
+                except Exception as e:
+                    escribir(f"Error al leer el archivo {archivo.name} con extensión {extension}: {str(e)}")
+                    escribir("Se continuará con el siguiente archivo.")
+                    continue
+                
+                # Aplicar recorte de footer dinámico
                 df = recortar_footer_dinamico(df)  # Corte dinámico del footer
                 validar_columnas(df, archivo.name)
                 
                 # Agregar columnas fijas
-                df["Unnamed: 0"] = t.strftime("%d/%m/%Y") 
-                df["Unnamed: 1"] = carpeta_nombre
-                df = df.rename(columns={"Unnamed: 0": "FECHA", "Unnamed: 1": "Proceso"})
+                fecha_actual = t.strftime("%d/%m/%Y")
+                if "FECHA" not in df.columns:
+                    df = df.drop(columns=["FECHA"], errors="ignore")  # Eliminar columna FECHA si ya existe para evitar duplicados
+                df.insert(0, "FECHA", fecha_actual)
+                
+                if "Proceso" not in df.columns:
+                    df = df.drop(columns=["Proceso"], errors="ignore")  # Eliminar columna Proceso si ya existe para evitar duplicados
+                df.insert(1, "Proceso", carpeta_nombre)
+                
                 df["__archivo_origen"] = archivo.name
 
                 
@@ -112,8 +136,8 @@ def obtener_datos(carpeta_archivos, clave, exts):
 
 #-------------------------------------------------------------------------------------------------------------
 #Concatena la información del dataframe
-def concatenar_datos(carpeta_archivos, clave, exts):
-    datos = obtener_datos(carpeta_archivos, clave, exts)
+def concatenar_datos(carpeta_archivos, clave, exts, omitir):
+    datos = obtener_datos(carpeta_archivos, clave, exts, omitir)
     df_total = pd.concat(datos)
     return df_total
 

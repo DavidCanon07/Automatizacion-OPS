@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-
+import openpyxl
 def limpiar_numero_latino(valor):
     """
     Convierte un número en formato latino (1.234,56) a float (1234.56)
@@ -118,6 +118,18 @@ def exportar_excel(df, ruta, sheet_name):
     
     # Agregar columna de índice
     df_exportar.insert(0, 'N°', range(1, len(df_exportar) + 1))
+    
+    # Agregar columna de concatenación PARA COMPARAR con el historico
+    df_exportar['Concatenado'] = (
+        df_exportar['Proceso'].astype(str) + 
+        df_exportar['Entidad de la cuenta'].astype(str) + 
+        df_exportar['Centro cuenta'].astype(str) + 
+        df_exportar['filler'].astype(str) + 
+        df_exportar['numero de la cuenta'].astype(str) + 
+        df_exportar['tipo'].astype(str) + 
+        df_exportar['valor ajuste'].apply(lambda x: f"{x:.2f}".replace('.', ',') if pd.notna(x) else '0,00') + 
+        df_exportar['Detalle del ajuste realizado'].astype(str)
+)
     
     # Exportar
     try:

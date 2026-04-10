@@ -1,18 +1,19 @@
 import pandas as pd
 from Configuracion_parametros import escribir, Campos_a_validar, largo_campos, ruta_error_largo_campos, ruta_alertas, ruta_columna_tipo, ruta_redondeo, ruta_inicio_campo, ruta_entidad_cuenta, ruta_filler, ruta_duplicados, justificacion_contable, ruta_justificacion_contable
 from validador.reportes import exportar_errores 
-
 #-------------------------------------------------------------------------------------------------------------
 #Función para validar el largo de campos específicos
 def validar_largo_campos(df):
     
     errores_totales = []
 
+
     for campo, regla in largo_campos.items():
 
         if campo not in df.columns:
             continue
-
+        
+        
         # Limpieza
         df[campo] = (
             df[campo]
@@ -26,6 +27,8 @@ def validar_largo_campos(df):
         df_validar = df[df[campo] != ""]
         if isinstance(regla, int):
             errores = df_validar[df_validar[campo].str.len() != regla]
+        elif isinstance(regla, list):
+            errores = df_validar[~df_validar[campo].str.len().isin(regla)]
         elif isinstance(regla, tuple):
             min_len, max_len = regla
             errores = df_validar[
@@ -41,6 +44,7 @@ def validar_largo_campos(df):
             errores["campo_evento"] = campo.upper()
             errores["descripcion"] = "Longitud incorrecta".upper()
             errores_totales.append(errores)
+
             
     # Si hay errores, se concatenan y se exportan a Excel. Luego se lanza una excepción para detener el proceso.        
     if errores_totales:
@@ -50,16 +54,18 @@ def validar_largo_campos(df):
             "⚠ Se encontraron errores de longitud. Revisar archivo: 02 - errores_largo_campos.xlsx",
             sheet_name="Errores Largo Campos"
         )
+    
     # Si no hay errores, se imprime mensaje de validación exitosa.
     else:
         escribir("✔ Validación de largo de campos completada sin errores.")
-
+    
     return df
 
 #-------------------------------------------------------------------------------------------------------------
 # validar campos no vacíos según regla de campos a validar, generando un reporte de alertas si se encuentran campos vacíos. Se asume que los primeros 2 campos no requieren validación de vacíos.
 def validar_campos_vacios(df):
     alertas_totales = []
+
 
     for campo in Campos_a_validar[2:]:
         if campo not in df.columns:
@@ -81,20 +87,15 @@ def validar_campos_vacios(df):
             alertas["descripcion"] = "Campo vacío".upper()
             alertas_totales.append(alertas)
 
-    # Solo escribimos Excel si HAY alertas
-    if alertas_totales:
-        alertas_totales = pd.concat(alertas_totales)
-        alertas_totales.index = alertas_totales.index + 8
-        alertas_totales = alertas_totales.sort_index()
 
-        with pd.ExcelWriter(ruta_alertas, engine="openpyxl", mode="w") as writer:
-            alertas_totales.to_excel(
-                writer,
-                sheet_name="Alertas Campos Vacíos",
-                index=True,
-                index_label="Fila en Excel",
-            )
-        escribir(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos_vacios.xlsx")
+    if alertas_totales:
+        df_alertas = pd.concat(alertas_totales, ignore_index=True)
+        exportar_errores(
+            df_alertas,
+            ruta_alertas,
+            "⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos_vacios.xlsx",
+            sheet_name="Alertas Campos Vacíos"
+        )
     else:
         escribir("✔ No se encontraron campos vacíos.")
 
