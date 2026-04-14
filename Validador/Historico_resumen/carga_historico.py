@@ -52,7 +52,7 @@ def comparar_consolidados(ruta_historico, ruta_archivo_unificado, ruta_retorno_d
             
             # Agregar columnas informativas
             duplicados = duplicados.copy()
-            duplicados['Número de fila'] = df_historico['N°']
+            duplicados['Número de fila registrada en historico'] = df_historico['N°']
             duplicados['Fecha_historico'] = df_historico['FECHA'].astype(str)
             duplicados['descripcion'] = "REGISTRO YA EXISTE EN EL ARCHIVO HISTÓRICO"
             

@@ -63,7 +63,8 @@ def crear_carpeta_si_no_existe(base_path, carpeta_archivos):
 
 #Configuración para búsqueda de archivos
 clave = 'OPS'
-exts = {'.xlsx', '.xls'}
+omitir = ['soporte OPS', 'soportes OPS', 'nueva OPS', 'CHECK LIST OPS']
+exts = {'.xlsx', '.xls', '.xlsb', '.xlsm'}
 
 # Rutas para guardar archivos de errores y alertas
 ruta_error_txt = r"C:\Prevalidador\errores.txt"

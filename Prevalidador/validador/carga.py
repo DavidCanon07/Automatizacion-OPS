@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import time as t
-from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, columna_ancla
+from Configuracion_parametros import carpeta_archivos, escribir, exts, clave, columna_ancla, omitir
 from validador.utils import formatea_nombre_columna
 from Configuracion_parametros import Campos_a_validar
 
@@ -68,17 +68,37 @@ def recortar_footer_dinamico(df):
 
 #-------------------------------------------------------------------------------------------------------------
 #Función para obtener los datos de los archivos que cumplen con la clave y extensión, aplicando validación de columnas y recorte de footer dinámico.
-def obtener_datos(carpeta_archivos, clave, exts):
+def obtener_datos(carpeta_archivos, clave, exts, omitir):
     datos = []
     try:    
-        for i in Path(carpeta_archivos).iterdir():
-            if i.is_file() and i.suffix.lower() in exts and str(clave).lower() in i.stem.lower():
-                escribir(f"Archivo encontrado: {i.name}")
-                t.sleep(0.5)
-                df = pd.read_excel(i, skiprows=6, dtype=str)
+        for archivo in Path(carpeta_archivos).iterdir():
+            if archivo.is_file() and archivo.suffix.lower() in exts and str(clave).lower() in archivo.stem.lower() and not any(om.lower() in archivo.stem.lower() for om in omitir):
+                
+                escribir(f"Archivo encontrado: {archivo.name}")
+
+                extension = archivo.suffix.lower()
+                
+                try:
+                    if extension == ".xlsb":
+                        try:
+                            df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='calamine')
+                            escribir("Archivo .xlsb leído con éxito usando 'calamine'")
+                        except ImportError:
+                            df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='pyxlsb')
+                            escribir("Archivo .xlsb leído con éxito usando 'pyxlsb'")
+                    elif extension in [".xlsx", ".xlsm"]:
+                        df = pd.read_excel(archivo, skiprows=6, dtype=str, engine='openpyxl')
+                        escribir(f"Archivo {extension} leído con éxito usando 'openpyxl'")
+                    else:
+                        df = pd.read_excel(archivo, skiprows=6, dtype=str)
+                        escribir(f"Archivo {extension} leído con éxito usando el motor por defecto")
+                except Exception as e:
+                    escribir(f"Error al leer el archivo {archivo.name} con extensión {extension}: {str(e)}")
+                    escribir("Se continuará con el siguiente archivo.")
+                    continue
                 df = recortar_footer_dinamico(df)  # Corte dinámico del footer
-                validar_columnas(df, i.name)
-                df["__archivo_origen"] = i.name
+                validar_columnas(df, archivo.name)
+                df["__archivo_origen"] = archivo.name
                 
                 df = df.reset_index(drop=True)
                 datos.append(df)
@@ -92,7 +112,7 @@ def obtener_datos(carpeta_archivos, clave, exts):
 #-------------------------------------------------------------------------------------------------------------
 #Concatena la información del dataframe
 def concatenar_datos():
-    datos = obtener_datos(carpeta_archivos, clave, exts)
+    datos = obtener_datos(carpeta_archivos, clave, exts, omitir)
     df_total = pd.concat(datos)
     return df_total
 

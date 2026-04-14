@@ -9,11 +9,13 @@ def validar_largo_campos(df):
     
     errores_totales = []
 
+
     for campo, regla in largo_campos.items():
 
         if campo not in df.columns:
             continue
-
+        
+        
         # Limpieza
         df[campo] = (
             df[campo]
@@ -27,6 +29,8 @@ def validar_largo_campos(df):
         df_validar = df[df[campo] != ""]
         if isinstance(regla, int):
             errores = df_validar[df_validar[campo].str.len() != regla]
+        elif isinstance(regla, list):
+            errores = df_validar[~df_validar[campo].str.len().isin(regla)]
         elif isinstance(regla, tuple):
             min_len, max_len = regla
             errores = df_validar[
@@ -42,6 +46,7 @@ def validar_largo_campos(df):
             errores["campo_evento"] = campo.upper()
             errores["descripcion"] = "Longitud incorrecta".upper()
             errores_totales.append(errores)
+
             
     # Si hay errores, se concatenan y se exportan a Excel. Luego se lanza una excepción para detener el proceso.        
     if errores_totales:
@@ -49,19 +54,20 @@ def validar_largo_campos(df):
             pd.concat(errores_totales),
             ruta_error_largo_campos,
             "⚠ Se encontraron errores de longitud. Revisar archivo: 02 - errores_largo_campos.xlsx",
-            sheet_name="Errores Largo Campos",
-            index=True
+            sheet_name="Errores Largo Campos"
         )
+    
     # Si no hay errores, se imprime mensaje de validación exitosa.
     else:
         escribir("✔ Validación de largo de campos completada sin errores.")
-
+    
     return df
 
 #-------------------------------------------------------------------------------------------------------------
 # validar campos no vacíos según regla de campos a validar, generando un reporte de alertas si se encuentran campos vacíos. Se asume que los primeros 2 campos no requieren validación de vacíos.
 def validar_campos_vacios(df):
     alertas_totales = []
+
 
     for campo in Campos_a_validar[2:]:
         if campo not in df.columns:
@@ -83,20 +89,15 @@ def validar_campos_vacios(df):
             alertas["descripcion"] = "Campo vacío".upper()
             alertas_totales.append(alertas)
 
-    # Solo escribimos Excel si HAY alertas
-    if alertas_totales:
-        alertas_totales = pd.concat(alertas_totales)
-        alertas_totales.index = alertas_totales.index + 8
-        alertas_totales = alertas_totales.sort_index()
 
-        with pd.ExcelWriter(ruta_alertas, engine="openpyxl", mode="w") as writer:
-            alertas_totales.to_excel(
-                writer,
-                sheet_name="Alertas Campos Vacíos",
-                index=True,
-                index_label="Fila en Excel",
-            )
-        escribir(f"⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos_vacios.xlsx")
+    if alertas_totales:
+        df_alertas = pd.concat(alertas_totales, ignore_index=True)
+        exportar_errores(
+            df_alertas,
+            ruta_alertas,
+            "⚠ Se encontraron alertas de campos vacíos. Revisar archivo: 04 - alertas_campos_vacios.xlsx",
+            sheet_name="Alertas Campos Vacíos"
+        )
     else:
         escribir("✔ No se encontraron campos vacíos.")
 
@@ -124,8 +125,7 @@ def validar_columna_tipo(df):
             errores_tipo,
             ruta_columna_tipo,
             "⚠ Se encontraron valores inválidos en la columna 'tipo'. Revisar archivo: 03 - errores_columna_tipo.xlsx",
-            sheet_name="Errores Columna Tipo",
-            index=True
+            sheet_name="Errores Columna Tipo"
         )
     else:
         escribir("✔ Validación de columna 'tipo' completada sin errores.")
@@ -156,8 +156,7 @@ def validar_redondeo_valores(df):
             ruta_redondeo,
             "⚠ Se encontraron valores con decimales que no están redondeados a 2 decimales. "
             "Revisar archivo: 05 - errores_redondeo.xlsx",
-            sheet_name="Errores Valor Ajuste",
-            index=True
+            sheet_name="Errores Valor Ajuste"
         )
     else:
         escribir("✔ Validación de redondeo en campos de valor completada sin errores.")
@@ -184,8 +183,7 @@ def validar_inicio_numero_cuenta(df, campo: str, prefijo):
             ruta_inicio_campo,
             f"⚠ Se encontraron valores en '{campo}' que no inician por {prefijo}. "
             f"Revisar archivo: 06 - errores_inicio_numero_cuenta.xlsx",
-            sheet_name="Errores Inicio Campo",
-            index=True
+            sheet_name="Errores Inicio Campo"
         )
     else:
         escribir(f"✔ Validación de inicio de campo '{campo}' completada sin errores.")
@@ -219,8 +217,7 @@ def validar_entidad_cuenta(df):
             ruta_entidad_cuenta,
             "⚠ Se encontraron valores inválidos en 'Entidad de la cuenta'. "
             "Revisar archivo: 07 - errores_entidad_de_cuenta.xlsx",
-            sheet_name="Errores Entidad Cuenta",
-            index=True
+            sheet_name="Errores Entidad Cuenta"
         )
     else:
         escribir("✔ Validación de entidad completada sin errores.")
@@ -255,8 +252,7 @@ def validar_filler(df):
             ruta_filler,
             "⚠ Se encontraron valores inválidos en 'Filler'. "
             "Revisar archivo: 08 - errores_filler.xlsx",
-            sheet_name="Errores Filler",
-            index=True
+            sheet_name="Errores Filler"
         )
     else:
         escribir("✔ Validación de filler completada sin errores.")
@@ -288,8 +284,7 @@ def validar_duplicados(df):
             ruta_duplicados,
             "⚠ Se encontraron duplicados en el archivo. "
             "Revisar archivo: ALERTA_DUPLICADOS.xlsx",
-            sheet_name="Alerta Duplicados",
-            index=True
+            sheet_name="Alerta Duplicados"
         )
     else:
         escribir("✔ Validación de duplicados completada sin Alertas.")
@@ -337,8 +332,7 @@ def validar_justificacion_contable(df):
             ruta_justificacion_contable,
             "⚠ Se encontraron valores inválidos en 'Justificacion contable'. "
             "Revisar archivo: 09 - errores_justificacion_contable.xlsx",
-            sheet_name="Errores Justificacion Contable",
-            index=True
+            sheet_name="Errores Justificacion Contable"
         )
     else:
         escribir("✔ Validación de justificación contable completada sin errores.")
